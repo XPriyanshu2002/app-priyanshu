@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Best Infra Consumer Mobile System Test Project
 
 This repository contains:
@@ -114,3 +115,6 @@ For Android APK output:
 3. Hosted backend URL (public Render URL)
 4. Database schema (`backend/db/schema.sql`)
 5. APK file generated from EAS build
+=======
+# BestInfraTask
+>>>>>>> d5f9a93c577e8891ee479b70dd47dadd286f4112
