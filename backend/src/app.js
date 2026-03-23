@@ -22,6 +22,10 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
+app.get('/', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
