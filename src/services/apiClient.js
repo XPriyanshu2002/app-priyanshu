@@ -75,10 +75,17 @@ export const apiRequest = async (
   { method = 'GET', body, headers = {}, tokenOverride = null } = {}
 ) => {
   const token = tokenOverride || tokenProvider();
+  const normalizedMethod = String(method).toUpperCase();
   const requestHeaders = {
+    Accept: 'application/json',
     'Content-Type': 'application/json',
     ...headers,
   };
+
+  if (normalizedMethod === 'GET') {
+    requestHeaders['Cache-Control'] = requestHeaders['Cache-Control'] || 'no-cache';
+    requestHeaders.Pragma = requestHeaders.Pragma || 'no-cache';
+  }
 
   if (token) {
     requestHeaders.Authorization = `Bearer ${token}`;
@@ -93,7 +100,7 @@ export const apiRequest = async (
 
     try {
       const response = await fetch(`${baseUrl}${path}`, {
-        method,
+        method: normalizedMethod,
         headers: requestHeaders,
         body: body ? JSON.stringify(body) : undefined,
         signal: controller.signal,

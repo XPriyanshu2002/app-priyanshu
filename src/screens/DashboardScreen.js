@@ -22,6 +22,7 @@ import { formatCurrency } from '../utils/formatters';
 const { width: SW } = Dimensions.get('window');
 const TIME_FILTERS = ['7D', '30D', '90D', '1Y'];
 const CHART_MODES = ['Bar', 'Line'];
+const MAX_SKELETON_WAIT_MS = 1400;
 
 const FALLBACK_USAGE = [
   { label: 'Jan', value: 55 }, { label: 'Feb', value: 62 }, { label: 'Mar', value: 58 },
@@ -67,13 +68,14 @@ const Skeleton = ({ width: w, height: h, style, borderRadius: br }) => {
 
 const DashboardScreen = ({ navigation }) => {
   const { user } = useAuth();
-  const [timeRange, setTimeRange] = useState('1Y');
+  const [timeRange, setTimeRange] = useState('30D');
   const [switching, setSwitching] = useState(false);
   const [dashboard, setDashboard] = useState(FALLBACK);
   const [chartMode, setChartMode] = useState('Bar');
   const [chartDropOpen, setChartDropOpen] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const latestRequestRef = useRef(0);
 
   const entrance = useRef(new Animated.Value(0)).current;
   const contentOpacity = useRef(new Animated.Value(1)).current;
@@ -84,34 +86,47 @@ const DashboardScreen = ({ navigation }) => {
   }, [entrance]);
 
   const loadDashboard = useCallback(async (range) => {
-    /* Phase 1: fade out content smoothly */
+    const requestId = latestRequestRef.current + 1;
+    latestRequestRef.current = requestId;
+    setSwitching(true);
+    let hasRevealed = false;
+
+    /* Fade out content while new data is being fetched */
     Animated.parallel([
-      Animated.timing(contentOpacity, { toValue: 0, duration: 180, useNativeDriver: true }),
-      Animated.timing(contentSlide, { toValue: 6, duration: 180, useNativeDriver: true }),
-    ]).start(() => {
-      /* Phase 2: show skeletons only after content is fully invisible */
-      setSwitching(true);
-    });
-    try {
-      const data = await dashboardService.getDashboard(range);
-      setDashboard(data);
-    } catch (_) { /* keep fallback */ }
-    /* Phase 3: after data settles, hide skeletons and fade content back */
-    setTimeout(() => {
+      Animated.timing(contentOpacity, { toValue: 0, duration: 120, useNativeDriver: true }),
+      Animated.timing(contentSlide, { toValue: 6, duration: 120, useNativeDriver: true }),
+    ]).start();
+
+    const revealContent = () => {
+      if (hasRevealed || latestRequestRef.current !== requestId) {
+        return;
+      }
+
+      hasRevealed = true;
       setSwitching(false);
       Animated.parallel([
-        Animated.timing(contentOpacity, { toValue: 1, duration: 320, useNativeDriver: true }),
-        Animated.timing(contentSlide, { toValue: 0, duration: 320, useNativeDriver: true }),
+        Animated.timing(contentOpacity, { toValue: 1, duration: 220, useNativeDriver: true }),
+        Animated.timing(contentSlide, { toValue: 0, duration: 220, useNativeDriver: true }),
       ]).start();
-    }, 450);
+    };
+
+    const revealTimeout = setTimeout(revealContent, MAX_SKELETON_WAIT_MS);
+
+    try {
+      const data = await dashboardService.getDashboard(range);
+      if (latestRequestRef.current === requestId) {
+        setDashboard(data);
+      }
+    } catch (_) { /* keep fallback */ }
+    clearTimeout(revealTimeout);
+    revealContent();
   }, [contentOpacity, contentSlide]);
 
   useFocusEffect(useCallback(() => { loadDashboard(timeRange); }, [loadDashboard, timeRange]));
 
   const handleFilterPress = (f) => {
-    if (f === timeRange || switching) return;
+    if (f === timeRange) return;
     setTimeRange(f);
-    loadDashboard(f);
   };
 
   const onDateChange = (_, date) => {
