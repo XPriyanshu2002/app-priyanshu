@@ -22,9 +22,11 @@ const register = async ({ name, email, password }) => {
   const passwordHash = await bcrypt.hash(password, 10);
   const userId = await userModel.createUser({ name, email, passwordHash });
 
-  await dashboardModel.createDefaultDashboardForUser(userId);
-  await dashboardModel.createDefaultAlertsForUser(userId, name);
-  await notificationModel.createDefaultNotificationsForUser(userId);
+  await Promise.all([
+    dashboardModel.createDefaultDashboardForUser(userId),
+    dashboardModel.createDefaultAlertsForUser(userId, name),
+    notificationModel.createDefaultNotificationsForUser(userId),
+  ]);
 
   return {
     message: 'User registered successfully',

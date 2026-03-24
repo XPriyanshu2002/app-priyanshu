@@ -96,8 +96,7 @@ const RegisterScreen = ({ navigation }) => {
     setLoading(true);
     try {
       await register({ name: name.trim(), email: email.trim(), password });
-      setSuccess('Registration successful. You can login now.');
-      setTimeout(() => navigation.replace('Login'), 900);
+      navigation.replace('Login');
     } catch (submitError) {
       setError(submitError.message || 'Could not register.');
     } finally {
