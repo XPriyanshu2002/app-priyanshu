@@ -5,6 +5,43 @@ const { isRecoverableDbError } = require('./utils/dbError');
 
 const MAX_PORT_RETRIES = 10;
 
+const formatDbError = (error) => {
+  const details = [error?.message, error?.code, error?.errno].filter(Boolean).join(' | ');
+  return details || 'Unknown DB error';
+};
+
+const sleep = (ms) =>
+  new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+
+const initDatabaseWithRetries = async () => {
+  const isProduction = process.env.NODE_ENV === 'production';
+  const configuredAttempts = Math.max(1, Number(env.dbInitRetries || 1));
+  const maxAttempts = isProduction ? configuredAttempts : 1;
+  const retryDelay = Math.max(0, Number(env.dbInitRetryDelayMs || 0));
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      await pool.initDatabase();
+      return;
+    } catch (error) {
+      const details = formatDbError(error);
+      const isLastAttempt = attempt >= maxAttempts;
+
+      if (isLastAttempt) {
+        throw error;
+      }
+
+      // eslint-disable-next-line no-console
+      console.warn(
+        `Database initialization attempt ${attempt}/${maxAttempts} failed: ${details}. Retrying in ${retryDelay}ms...`
+      );
+      await sleep(retryDelay);
+    }
+  }
+};
+
 const startServer = (port, retries = 0) => {
   const server = app.listen(port, () => {
     // eslint-disable-next-line no-console
@@ -28,10 +65,10 @@ const startServer = (port, retries = 0) => {
 
 const bootstrap = async () => {
   try {
-    await pool.initDatabase();
+    await initDatabaseWithRetries();
     startServer(env.port);
   } catch (error) {
-    const details = [error?.message, error?.code, error?.errno].filter(Boolean).join(' | ') || 'Unknown DB error';
+    const details = formatDbError(error);
 
     if (isRecoverableDbError(error)) {
       // eslint-disable-next-line no-console

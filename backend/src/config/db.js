@@ -7,10 +7,11 @@ const quoteIdentifier = (value) => `\`${String(value).replace(/`/g, '``')}\``;
 
 const ensureDatabaseExists = async () => {
   const adminConnection = await mysql.createConnection({
-    host: env.db.host,
-    port: env.db.port,
-    user: env.db.user,
-    password: env.db.password,
+    host: "trolley.proxy.rlwy.net",
+    port: 15412,
+    user: "root",
+    password: "DYocRoAQQlahZEJiAFZBepqzZgKTGVfV",
+    database: "bestinfra"
   });
 
   try {
