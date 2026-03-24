@@ -1,20 +1,44 @@
 import Constants from 'expo-constants';
-import { Platform } from 'react-native';
+import { NativeModules, Platform } from 'react-native';
 
 const API_TIMEOUT_MS = Number(process.env.EXPO_PUBLIC_API_TIMEOUT_MS || 15000);
 const DEFAULT_API_PORT = Number(process.env.EXPO_PUBLIC_API_PORT || 5000);
 
 const stripTrailingSlash = (url) => url.replace(/\/+$/, '');
+const SOURCE_CODE_SCRIPT_URL = NativeModules?.SourceCode?.scriptURL || null;
+
+const getHostFromCandidate = (candidate) => {
+  if (!candidate) {
+    return null;
+  }
+
+  const raw = String(candidate).trim();
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    const normalized = raw.includes('://') ? raw : `http://${raw}`;
+    const parsed = new URL(normalized);
+    return parsed.hostname || null;
+  } catch (_) {
+    const withoutScheme = raw.replace(/^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//, '');
+    const hostPart = withoutScheme.split('/')[0] || '';
+    const host = hostPart.split(':')[0] || '';
+    return host || null;
+  }
+};
 
 const getDevHostFromExpo = () => {
   const hostCandidates = [
     Constants.expoConfig?.hostUri,
     Constants.manifest2?.extra?.expoClient?.hostUri,
     Constants.manifest?.debuggerHost,
+    SOURCE_CODE_SCRIPT_URL,
   ].filter(Boolean);
 
   for (const candidate of hostCandidates) {
-    const host = String(candidate).split(':')[0];
+    const host = getHostFromCandidate(candidate);
     if (host) {
       return host;
     }
@@ -23,21 +47,41 @@ const getDevHostFromExpo = () => {
   return null;
 };
 
+const unique = (items) => {
+  const seen = new Set();
+  return items.filter((item) => {
+    const key = String(item || '').toLowerCase();
+    if (!item || seen.has(key)) {
+      return false;
+    }
+
+    seen.add(key);
+    return true;
+  });
+};
+
+const resolveHostCandidates = () => {
+  const expoHost = getDevHostFromExpo();
+
+  if (Platform.OS === 'android') {
+    return unique([
+      expoHost,
+      'localhost',
+      '10.0.2.2',
+      '127.0.0.1',
+    ]);
+  }
+
+  return unique([expoHost, 'localhost', '127.0.0.1']);
+};
+
 const resolveDefaultApiBaseUrl = () => {
   if (process.env.EXPO_PUBLIC_API_BASE_URL) {
     return stripTrailingSlash(process.env.EXPO_PUBLIC_API_BASE_URL);
   }
 
-  const expoHost = getDevHostFromExpo();
-  if (expoHost) {
-    return `http://${expoHost}:${DEFAULT_API_PORT}/api`;
-  }
-
-  if (Platform.OS === 'android') {
-    return `http://10.0.2.2:${DEFAULT_API_PORT}/api`;
-  }
-
-  return `http://localhost:${DEFAULT_API_PORT}/api`;
+  const [defaultHost] = resolveHostCandidates();
+  return `http://${defaultHost || 'localhost'}:${DEFAULT_API_PORT}/api`;
 };
 
 export const DEFAULT_API_BASE_URL = resolveDefaultApiBaseUrl();
@@ -49,16 +93,16 @@ const resolveApiBaseCandidates = () => {
     return [DEFAULT_API_BASE_URL];
   }
 
-  const expoHost = getDevHostFromExpo();
-  if (expoHost) {
-    return AUTO_FALLBACK_PORTS.map((port) => `http://${expoHost}:${port}/api`);
+  const hosts = resolveHostCandidates();
+  const baseUrls = [];
+
+  for (const host of hosts) {
+    for (const port of AUTO_FALLBACK_PORTS) {
+      baseUrls.push(`http://${host}:${port}/api`);
+    }
   }
 
-  if (Platform.OS === 'android') {
-    return AUTO_FALLBACK_PORTS.map((port) => `http://10.0.2.2:${port}/api`);
-  }
-
-  return AUTO_FALLBACK_PORTS.map((port) => `http://localhost:${port}/api`);
+  return unique(baseUrls);
 };
 
 let apiBaseCandidates = resolveApiBaseCandidates();
@@ -154,6 +198,6 @@ export const apiRequest = async (
   }
 
   throw new Error(
-    `Network request failed. Verify backend is running and reachable at ${activeApiBaseUrl}.`
+    `Network request failed. Verify backend is running. Tried: ${candidates.join(', ')}`
   );
 };
