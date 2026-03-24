@@ -11,7 +11,7 @@ const ensureDatabaseExists = async () => {
     port: 15412,
     user: "root",
     password: "DYocRoAQQlahZEJiAFZBepqzZgKTGVfV",
-    database: "bestinfra"
+    database: "railway"
   });
 
   try {
