@@ -5,7 +5,10 @@ import { useFocusEffect } from '@react-navigation/native';
 
 import * as notificationService from '../services/notificationService';
 import AppHeader from '../components/AppHeader';
+import { useThemeMode } from '../context/ThemeContext';
+import Rings from '../components/Rings';
 
+// intentionally static — per-type semantic accent colors, not mode-varying
 const TYPE_STYLE = {
   LOW_BALANCE: { color: '#132C69', borderColor: '#132C69', icon: 'wallet-outline' },
   BILL_DUE: { color: '#FF5F35', borderColor: '#FF5F35', icon: 'calendar-outline' },
@@ -36,6 +39,7 @@ const defaultNotifications = [
 ];
 
 const NotificationsScreen = ({ navigation }) => {
+  const { theme } = useThemeMode();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [items, setItems] = useState(defaultNotifications);
@@ -76,11 +80,13 @@ const NotificationsScreen = ({ navigation }) => {
   );
 
   return (
-    <View style={styles.safeArea}>
+    <View style={[styles.safeArea, { backgroundColor: theme.colors.settingsBackground }]}>
+      <Rings top="-12%" />
       <Animated.View
         style={[
           styles.root,
           {
+            backgroundColor: "transparent",
             opacity: entrance,
             transform: [
               {
@@ -93,34 +99,22 @@ const NotificationsScreen = ({ navigation }) => {
           },
         ]}
       >
-        <View style={styles.topBlock}>
-          {[130, 188, 246, 304].map((size) => (
-            <View key={size} style={[styles.ring, { width: size, height: size, borderRadius: size / 2 }]} />
-          ))}
-          {/* <AppHeader
-            navigation={navigation}
-            rightIcon="notifications-outline"
-            rightOnPress={() => navigation.goBack()}
-            screenName="Notifications"
-          /> */}
-        </View>
-
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          {loading ? <ActivityIndicator style={styles.loader} color="#58B66C" /> : null}
-          {!!error ? <Text style={styles.error}>{error}</Text> : null}
+          {loading ? <ActivityIndicator style={styles.loader} color={theme.colors.success} /> : null}
+          {!!error ? <Text style={[styles.error, { color: theme.colors.danger }]}>{error}</Text> : null}
 
           {items.map((item) => {
             const typeStyle = TYPE_STYLE[item.type] || TYPE_STYLE.SYSTEM_ALERT;
 
             return (
-              <View key={item.id} style={[styles.card, { borderLeftColor: typeStyle.borderColor }]}>
+              <View key={item.id} style={[styles.card, { backgroundColor: theme.colors.notificationCardBg, borderLeftColor: typeStyle.borderColor }]}>
                 <View style={styles.cardHeader}>
                   <Text style={[styles.cardTitle, { color: typeStyle.color }]}>{item.title}</Text>
-                  <View style={styles.badge}>
+                  <View style={[styles.badge, { backgroundColor: theme.colors.badgeBackground }]}>
                     <Ionicons name={typeStyle.icon} size={16} color={typeStyle.color} />
                   </View>
                 </View>
-                <Text style={styles.cardDescription}>{item.description}</Text>
+                <Text style={[styles.cardDescription, { color: theme.colors.textMuted }]}>{item.description}</Text>
               </View>
             );
           })}
@@ -133,12 +127,10 @@ const NotificationsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#123378',
   },
   root: {
     flex: 1,
-    backgroundColor: '#123378',
-    marginTop: "20%",
+    marginTop: "30%",
   },
   topBlock: {
     paddingHorizontal: 14,
@@ -150,7 +142,6 @@ const styles = StyleSheet.create({
     top: -56,
     alignSelf: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(133, 165, 223, 0.18)',
   },
   topRow: {
     marginTop: 8,
@@ -162,13 +153,10 @@ const styles = StyleSheet.create({
     width: 62,
     height: 62,
     borderRadius: 31,
-    backgroundColor: '#F5F7FF',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  notifyButton: {
-    backgroundColor: '#58B66C',
-  },
+  notifyButton: {},
   logo: {
     width: 68,
     height: 68,
@@ -181,15 +169,12 @@ const styles = StyleSheet.create({
   loader: {
     marginVertical: 10,
   },
-  error: {
-    color: '#FFC8C8',
-  },
+  error: {},
   card: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 8,
     padding: 12,
     borderLeftWidth: 4,
-    borderLeftColor: '#132C69',
+    // intentionally static — shadow color is decorative
     shadowColor: '#000E33',
     shadowOpacity: 0.08,
     shadowRadius: 6,
@@ -210,12 +195,10 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: '#F2F4FA',
     alignItems: 'center',
     justifyContent: 'center',
   },
   cardDescription: {
-    color: '#555555',
     fontSize: 13,
     lineHeight: 20,
   },

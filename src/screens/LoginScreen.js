@@ -18,6 +18,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useAuth } from '../context/AuthContext';
+import { useThemeMode } from '../context/ThemeContext';
 import { isValidEmail } from '../utils/validators';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -25,6 +26,7 @@ const HERO_HEIGHT = SCREEN_HEIGHT * 0.24;
 
 const LoginScreen = ({ navigation }) => {
   const { login } = useAuth();
+  const { theme } = useThemeMode();
 
   const emailInputRef = useRef(null);
   const passwordInputRef = useRef(null);
@@ -87,9 +89,9 @@ const LoginScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-      <StatusBar style="light" />
-      <Animated.View style={[styles.root, { transform: [{ translateY: shiftY }] }]}>
+    <View style={{flex: 1}}>
+      <StatusBar style={theme.mode === 'dark' ? 'light' : 'dark'} />
+      <Animated.View style={[styles.root, { backgroundColor: theme.colors.surface, transform: [{ translateY: shiftY }] }]}>
         <View style={styles.heroWrap}>
           <ImageBackground source={require('../../assets/Background.png')} style={styles.heroBg} resizeMode="cover" />
         </View>
@@ -107,22 +109,22 @@ const LoginScreen = ({ navigation }) => {
               <Image source={require('../../assets/Logo.png')} style={styles.avatarLogo} resizeMode="contain" />
             </View>
 
-            <View style={{marginTop: "15%"}}>
-              <Text style={styles.title}>Welcome</Text>
-              <Text style={styles.title}>to Best Infra</Text>
+            <View style={{marginTop: "25%"}}>
+              <Text style={[styles.title, { color: theme.colors.text }]}>Welcome</Text>
+              <Text style={[styles.title, { color: theme.colors.text }]}>to Best Infra</Text>
             </View>
 
-            <Text style={styles.subtitle}>
+            <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>
               Log in to manage installations, view{'\n'}real-time project updates, and access smart{'\n'}metering
               insights — all in one platform.
             </Text>
 
-            <View style={styles.inputWrap}>
+            <View style={[styles.inputWrap, { backgroundColor: theme.colors.inputBackground }]}>
               <TextInput
                 ref={emailInputRef}
-                style={styles.input}
+                style={[styles.input, { color: theme.colors.inputText }]}
                 placeholder="Email / Phone Number"
-                placeholderTextColor="#A0A0A0"
+                placeholderTextColor={theme.colors.inputPlaceholder}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 returnKeyType="next"
@@ -130,15 +132,15 @@ const LoginScreen = ({ navigation }) => {
                 onChangeText={setEmail}
                 onSubmitEditing={() => passwordInputRef.current?.focus()}
               />
-              <Ionicons name="person-outline" size={18} color="#A0A0A0" />
+              <Ionicons name="person-outline" size={18} color={theme.colors.inputPlaceholder} />
             </View>
 
-            <View style={styles.inputWrap}>
+            <View style={[styles.inputWrap, { backgroundColor: theme.colors.inputBackground }]}>
               <TextInput
                 ref={passwordInputRef}
-                style={styles.input}
+                style={[styles.input, { color: theme.colors.inputText }]}
                 placeholder="Password"
-                placeholderTextColor="#A0A0A0"
+                placeholderTextColor={theme.colors.inputPlaceholder}
                 secureTextEntry={!showPassword}
                 returnKeyType="done"
                 value={password}
@@ -146,7 +148,7 @@ const LoginScreen = ({ navigation }) => {
                 onSubmitEditing={onSubmit}
               />
               <Pressable onPress={() => setShowPassword((prev) => !prev)} hitSlop={8}>
-                <Ionicons name={showPassword ? 'eye-outline' : 'eye-off-outline'} size={18} color="#A0A0A0" />
+                <Ionicons name={showPassword ? 'eye-outline' : 'eye-off-outline'} size={18} color={theme.colors.inputPlaceholder} />
               </Pressable>
             </View>
 
@@ -155,45 +157,43 @@ const LoginScreen = ({ navigation }) => {
                 <Ionicons
                   name={rememberMe ? 'checkbox' : 'square-outline'}
                   size={18}
-                  color={rememberMe ? '#4DB862' : '#8BA18F'}
+                  color={rememberMe ? theme.colors.success : theme.colors.textMuted}
                 />
-                <Text style={styles.rememberText}>Remember</Text>
+                <Text style={[styles.rememberText, { color: theme.colors.success }]}>Remember</Text>
               </Pressable>
               <Pressable onPress={() => setError('Forgot password flow is not configured yet.')} hitSlop={8}>
-                <Text style={styles.forgotText}>Forgot Password?</Text>
+                <Text style={[styles.forgotText, { color: theme.colors.success }]}>Forgot Password?</Text>
               </Pressable>
             </View>
 
-            {!!error && <Text style={styles.error}>{error}</Text>}
+            {!!error && <Text style={[styles.error, { color: theme.colors.danger }]}>{error}</Text>}
 
             <Pressable
               onPress={onSubmit}
-              style={({ pressed }) => [styles.submitButton, pressed || loading ? styles.pressed : null]}
+              style={({ pressed }) => [styles.submitButton, { backgroundColor: theme.colors.success }, pressed || loading ? styles.pressed : null]}
               disabled={loading}
             >
               <Text style={styles.submitButtonText}>{loading ? 'Please wait...' : 'Login Now'}</Text>
             </Pressable>
 
             <Pressable onPress={() => navigation.replace('Register')} style={styles.switchLink}>
-              <Text style={styles.switchText}>Create Account</Text>
+              <Text style={[styles.switchText, { color: theme.colors.primary }]}>Create Account</Text>
             </Pressable>
           </View>
         </ScrollView>
 
-        <View style={styles.homeIndicator} />
+        <View style={[styles.homeIndicator, { backgroundColor: theme.colors.primaryDark }]} />
       </Animated.View>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   root: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   heroWrap: {
     position: 'absolute',
@@ -242,13 +242,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#1E1E1E',
     lineHeight: 34,
     textAlign: 'center',
   },
   subtitle: {
     marginTop: 14,
-    color: '#5A5A5A',
     textAlign: 'center',
     lineHeight: 22,
     fontSize: 14,
@@ -258,7 +256,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 50,
     borderRadius: 8,
-    backgroundColor: '#F4F4F4',
     marginBottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
@@ -266,7 +263,6 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    color: '#2B2B2B',
     fontSize: 14,
   },
   metaRow: {
@@ -283,18 +279,15 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   rememberText: {
-    color: '#4DB862',
     fontSize: 14,
     fontWeight: '500',
   },
   forgotText: {
-    color: '#4DB862',
     fontSize: 14,
     fontWeight: '500',
   },
   error: {
     width: '100%',
-    color: '#C44536',
     fontSize: 13,
     marginBottom: 10,
     textAlign: 'left',
@@ -303,12 +296,11 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 52,
     borderRadius: 8,
-    backgroundColor: '#4DB862',
     alignItems: 'center',
     justifyContent: 'center',
   },
   submitButtonText: {
-    color: '#FFFFFF',
+    color: '#FFFFFF', // intentionally static
     fontSize: 16,
     fontWeight: '600',
   },
@@ -320,7 +312,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   switchText: {
-    color: '#1E469B',
     fontSize: 14,
     fontWeight: '500',
   },
@@ -330,7 +321,6 @@ const styles = StyleSheet.create({
     width: 134,
     height: 5,
     borderRadius: 3,
-    backgroundColor: '#1E2A5E',
   },
 });
 

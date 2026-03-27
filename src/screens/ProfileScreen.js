@@ -14,12 +14,15 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 
 import { useAuth } from '../context/AuthContext';
+import { useThemeMode } from '../context/ThemeContext';
 import * as profileService from '../services/profileService';
 import { isValidEmail } from '../utils/validators';
 import AppHeader from '../components/AppHeader';
+import Rings from '../components/Rings';
 
 const ProfileScreen = ({ navigation }) => {
   const { user, logout } = useAuth();
+  const { theme } = useThemeMode();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -51,7 +54,7 @@ const ProfileScreen = ({ navigation }) => {
     const onShow = (e) => {
       const kbHeight = e.endCoordinates.height;
       Animated.timing(shiftY, {
-        toValue: -(kbHeight * 0.8),
+        toValue: -(kbHeight * 0.82),
         duration: Platform.OS === 'ios' ? e.duration : 250,
         useNativeDriver: true,
       }).start();
@@ -133,12 +136,13 @@ const ProfileScreen = ({ navigation }) => {
   const valueOrPlaceholder = (value, placeholder) => (value ? value : placeholder);
 
   return (
-    <View style={styles.safeArea}>
+    <View style={[styles.safeArea, { backgroundColor: theme.colors.screenBackground }]}>
       <Animated.View style={{ flex: 1, transform: [{ translateY: shiftY }] }}>
       <Animated.View
         style={[
           styles.root,
           {
+            backgroundColor: theme.colors.screenBackground,
             opacity: entrance,
             transform: [
               {
@@ -151,22 +155,10 @@ const ProfileScreen = ({ navigation }) => {
           },
         ]}
       >
-        {/* <AppHeader
-          navigation={navigation}
-          rightIcon={isEditing ? 'arrow-back-outline' : 'log-out-outline'}
-          rightOnPress={isEditing ? () => setIsEditing(false) : logout}
-          screenName="Profile"
-        /> */}
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {!isEditing && <Rings top="-12%" />}
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} style={{ backgroundColor: 'transparent' }}>
           <View style={styles.hero}>
-            {!isEditing
-              ? [120, 170, 220, 270, 320].map((size) => (
-                  <View key={size} style={[styles.ring, { width: size, height: size, borderRadius: size / 2 }]} />
-                ))
-              : null}
-
-
-            <View style={styles.avatar}>
+            <View style={[styles.avatar, { backgroundColor: theme.colors.textMuted, borderColor: theme.colors.chipText }]}>
               <Text style={styles.avatarText}>
                 {(profile.name || user?.name || 'Srusti')
                   .split(' ')
@@ -177,71 +169,72 @@ const ProfileScreen = ({ navigation }) => {
             </View>
           </View>
 
-          <View style={styles.infoCard}>
-            <View style={styles.infoHeader}>
+          <View style={[styles.infoCard, { backgroundColor: theme.colors.cardBackground }]}>
+            <View style={[styles.infoHeader, { backgroundColor: theme.colors.success }]}>
               <Text style={styles.infoHeaderText}>Account Information</Text>
             </View>
             <View style={styles.infoBody}>
               <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Consumer ID</Text>
-                <Text style={styles.infoValue}>{consumerId}</Text>
+                <Text style={[styles.infoLabel, { color: theme.colors.textMuted }]}>Consumer ID</Text>
+                <Text style={[styles.infoValue, { color: theme.colors.text }]}>{consumerId}</Text>
               </View>
               <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Meter Number</Text>
-                <Text style={styles.infoValue}>{meterNumber}</Text>
+                <Text style={[styles.infoLabel, { color: theme.colors.textMuted }]}>Meter Number</Text>
+                <Text style={[styles.infoValue, { color: theme.colors.text }]}>{meterNumber}</Text>
               </View>
               <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Connection Type</Text>
-                <Text style={styles.infoValue}>Residential</Text>
+                <Text style={[styles.infoLabel, { color: theme.colors.textMuted }]}>Connection Type</Text>
+                <Text style={[styles.infoValue, { color: theme.colors.text }]}>Residential</Text>
               </View>
             </View>
           </View>
 
-          {loading ? <ActivityIndicator color="#57B86A" style={styles.loader} /> : null}
-          {!!error ? <Text style={styles.error}>{error}</Text> : null}
-          {!!message ? <Text style={styles.success}>{message}</Text> : null}
+          {loading ? <ActivityIndicator color={theme.colors.success} style={styles.loader} /> : null}
+          {!!error ? <Text style={[styles.error, { color: theme.colors.danger }]}>{error}</Text> : null}
+          {!!message ? <Text style={[styles.success, { color: theme.colors.success }]}>{message}</Text> : null}
 
           {isEditing ? (
             <>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: theme.colors.inputBackground1, color: theme.colors.inputText }]}
                 value={profile.name}
                 onChangeText={(name) => setProfile((prev) => ({ ...prev, name }))}
                 placeholder="Name"
-                placeholderTextColor="#8A8A8A"
+                placeholderTextColor={theme.colors.inputPlaceholder}
               />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: theme.colors.inputBackground1, color: theme.colors.inputText }]}
                 value={profile.phoneMasked}
                 onChangeText={(phoneMasked) => setProfile((prev) => ({ ...prev, phoneMasked }))}
                 placeholder="Phone"
-                placeholderTextColor="#8A8A8A"
+                placeholderTextColor={theme.colors.inputPlaceholder}
               />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: theme.colors.inputBackground1, color: theme.colors.inputText }]}
                 value={profile.email}
                 onChangeText={(email) => setProfile((prev) => ({ ...prev, email }))}
                 placeholder="Email"
-                placeholderTextColor="#8A8A8A"
+                placeholderTextColor={theme.colors.inputPlaceholder}
                 autoCapitalize="none"
                 keyboardType="email-address"
               />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: theme.colors.inputBackground1, color: theme.colors.inputText }]}
                 value={profile.address}
                 onChangeText={(address) => setProfile((prev) => ({ ...prev, address }))}
                 placeholder="Address"
-                placeholderTextColor="#8A8A8A"
+                placeholderTextColor={theme.colors.inputPlaceholder}
               />
 
               <View style={styles.actionsRow}>
-                <Pressable style={[styles.actionButton, styles.cancelButton]} onPress={() => setIsEditing(false)}>
-                  <Text style={styles.cancelText}>Cancel</Text>
+                <Pressable style={[styles.actionButton, styles.cancelButton, { borderColor: theme.colors.success, backgroundColor: theme.colors.cardBackground }]} onPress={() => setIsEditing(false)}>
+                  <Text style={[styles.cancelText, { color: theme.colors.text }]}>Cancel</Text>
                 </Pressable>
                 <Pressable
                   style={({ pressed }) => [
                     styles.actionButton,
                     styles.saveButton,
+                    { backgroundColor: theme.colors.success },
                     pressed || saving ? styles.buttonPressed : null,
                   ]}
                   onPress={onSave}
@@ -253,20 +246,20 @@ const ProfileScreen = ({ navigation }) => {
             </>
           ) : (
             <>
-              <View style={styles.valueBox}>
-                <Text style={styles.valueText}>{valueOrPlaceholder(profile.name, 'Srusti')}</Text>
+              <View style={[styles.valueBox, { backgroundColor: theme.colors.inputBackground1 }]}>
+                <Text style={[styles.valueText, { color: theme.colors.textMuted }]}>{valueOrPlaceholder(profile.name, 'Srusti')}</Text>
               </View>
-              <View style={styles.valueBox}>
-                <Text style={styles.valueText}>{valueOrPlaceholder(profile.phoneMasked, '85852***5656')}</Text>
+              <View style={[styles.valueBox, { backgroundColor: theme.colors.inputBackground1 }]}>
+                <Text style={[styles.valueText, { color: theme.colors.textMuted }]}>{valueOrPlaceholder(profile.phoneMasked, '85852***5656')}</Text>
               </View>
-              <View style={styles.valueBox}>
-                <Text style={styles.valueText}>{valueOrPlaceholder(profile.email, 'Email@')}</Text>
+              <View style={[styles.valueBox, { backgroundColor: theme.colors.inputBackground1 }]}>
+                <Text style={[styles.valueText, { color: theme.colors.textMuted }]}>{valueOrPlaceholder(profile.email, 'Email@')}</Text>
               </View>
-              <View style={styles.valueBox}>
-                <Text style={styles.valueText}>{valueOrPlaceholder(profile.address, 'Address')}</Text>
+              <View style={[styles.valueBox, { backgroundColor: theme.colors.inputBackground1 }]}>
+                <Text style={[styles.valueText, { color: theme.colors.textMuted }]}>{valueOrPlaceholder(profile.address, 'Address')}</Text>
               </View>
 
-              <Pressable style={({ pressed }) => [styles.editButton, pressed ? styles.buttonPressed : null]} onPress={() => setIsEditing(true)}>
+              <Pressable style={({ pressed }) => [styles.editButton, { backgroundColor: theme.colors.success }, pressed ? styles.buttonPressed : null]} onPress={() => setIsEditing(true)}>
                 <Text style={styles.editButtonText}>Edit Profile</Text>
               </Pressable>
             </>
@@ -281,28 +274,19 @@ const ProfileScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#EAF1ED',
   },
   root: {
     flex: 1,
-    backgroundColor: '#EAF1ED',
   },
   content: {
     paddingHorizontal: 16,
     paddingBottom: 30,
-    marginTop: "20%",
+    marginTop: "35%",
   },
   hero: {
     marginTop: 8,
     minHeight: 190,
     alignItems: 'center',
-    overflow: 'hidden',
-  },
-  ring: {
-    position: 'absolute',
-    top: -65,
-    borderWidth: 1,
-    borderColor: 'rgba(125, 147, 169, 0.2)',
   },
   topRow: {
     width: '100%',
@@ -319,7 +303,6 @@ const styles = StyleSheet.create({
     width: 58,
     height: 58,
     borderRadius: 29,
-    backgroundColor: '#F3F6F9',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#1B3365',
@@ -333,13 +316,11 @@ const styles = StyleSheet.create({
     height: 120,
     borderRadius: 60,
     borderWidth: 1,
-    borderColor: '#5E7A99',
-    backgroundColor: '#7894AF',
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: {
-    color: '#FFFFFF',
+    color: '#FFFFFF', // intentionally static
     fontWeight: '800',
     fontSize: 32,
   },
@@ -347,15 +328,13 @@ const styles = StyleSheet.create({
     marginTop: 4,
     borderRadius: 8,
     overflow: 'hidden',
-    backgroundColor: '#FFFFFF',
   },
   infoHeader: {
-    backgroundColor: '#57B86A',
     paddingHorizontal: 10,
     paddingVertical: 10,
   },
   infoHeaderText: {
-    color: '#FFFFFF',
+    color: '#FFFFFF', // intentionally static
     fontWeight: '500',
     fontSize: 14,
   },
@@ -370,11 +349,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   infoLabel: {
-    color: '#404040',
     fontSize: 16,
   },
   infoValue: {
-    color: '#2F2F2F',
     fontWeight: '700',
     fontSize: 17,
   },
@@ -383,44 +360,37 @@ const styles = StyleSheet.create({
   },
   error: {
     marginTop: 8,
-    color: '#C44536',
   },
   success: {
     marginTop: 8,
-    color: '#1E874E',
   },
   valueBox: {
     marginTop: 12,
     height: 54,
     borderRadius: 8,
-    backgroundColor: '#F7F8F8',
     justifyContent: 'center',
     paddingHorizontal: 20,
   },
   valueText: {
-    color: '#5B5B5B',
     fontSize: 15,
   },
   input: {
     marginTop: 12,
     height: 54,
     borderRadius: 8,
-    backgroundColor: '#F7F8F8',
     justifyContent: 'center',
     paddingHorizontal: 20,
-    color: '#2C2C2C',
     fontSize: 15,
   },
   editButton: {
     marginTop: 14,
     height: 54,
     borderRadius: 8,
-    backgroundColor: '#56B96B',
     alignItems: 'center',
     justifyContent: 'center',
   },
   editButtonText: {
-    color: '#FFFFFF',
+    color: '#FFFFFF', // intentionally static
     fontWeight: '700',
     fontSize: 16,
   },
@@ -438,18 +408,14 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     borderWidth: 2,
-    borderColor: '#56B96B',
-    backgroundColor: '#F3F7F4',
   },
   saveButton: {
-    backgroundColor: '#56B96B',
   },
   cancelText: {
-    color: '#3A3A3A',
     fontSize: 15,
   },
   saveText: {
-    color: '#FFFFFF',
+    color: '#FFFFFF', // intentionally static
     fontSize: 15,
     fontWeight: '700',
   },

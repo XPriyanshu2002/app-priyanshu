@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useThemeMode } from '../context/ThemeContext';
 import { DrawerProvider, useDrawer } from '../context/DrawerContext';
+import { statusBarState } from '../utils/statusBarState';
 import SplashScreen from '../screens/SplashScreen';
 import OnboardingScreen from '../screens/OnboardingScreen';
 import LoginScreen from '../screens/LoginScreen';
@@ -33,10 +34,10 @@ const Tab = createBottomTabNavigator();
 /* ── bestInfra-matched constants ── */
 const MENU_SCALE = 0.68;
 const MENU_TRANSLATE_X = 258;
-const MENU_TRANSLATE_Y = 50;
+const MENU_TRANSLATE_Y = 110;
 const BACKPLATE_WIDTH = 278;
 const BACKPLATE_HEIGHT = 520;
-const BACKPLATE_TOP = 165;
+const BACKPLATE_TOP = 225;
 const BACKPLATE_RIGHT = -115;
 const BACKPLATE_DARK_HEIGHT = 148;
 const WIDTH_SCALE = SW / 375;
@@ -53,6 +54,7 @@ const TAB_ICONS = {
 /* Custom tab bar — hides when drawer is open */
 const CustomTabBar = ({ state, descriptors, navigation }) => {
   const { progress, isOpen } = useDrawer();
+  const { theme } = useThemeMode();
 
   const tabOpacity = progress.interpolate({ inputRange: [0, 1], outputRange: [1, 0] });
   const tabTranslateY = progress.interpolate({ inputRange: [0, 1], outputRange: [0, 80] });
@@ -75,10 +77,10 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
             android_ripple={null}
             style={({ pressed }) => [tabStyles.item, pressed && tabStyles.pressed]}
           >
-            <View style={[tabStyles.iconWrap, focused ? tabStyles.iconActive : tabStyles.iconInActive]}>
-              <Ionicons name={focused ? icons.filled : icons.outline} size={25} color={focused ? '#FFFFFF' : '#56B769'} />
+            <View style={[tabStyles.iconWrap, focused ? [tabStyles.iconActive, { backgroundColor: theme.colors.tabActive }] : [tabStyles.iconInActive, { backgroundColor: theme.colors.tabInactive }]]}>
+              <Ionicons name={focused ? icons.filled : icons.outline} size={25} color={focused ? theme.colors.tabIconActive : theme.colors.tabIconInactive} />
             </View>
-            <Text style={[tabStyles.label, focused && tabStyles.labelActive]}>{label}</Text>
+            <Text style={[tabStyles.label, { color: theme.colors.tabLabel }, focused && { color: theme.colors.tabActive, fontWeight: '600' }]}>{label}</Text>
           </Pressable>
         );
       })}
@@ -88,7 +90,7 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
 
 const tabStyles = StyleSheet.create({
   bar: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
+    position: 'absolute', bottom: 10, left: 0, right: 0,
     flexDirection: 'row',
     paddingVertical: 8, paddingBottom: Platform.OS === 'ios' ? 24 : 10,
     borderTopLeftRadius: 16, borderTopRightRadius: 16,
@@ -99,10 +101,10 @@ const tabStyles = StyleSheet.create({
     overflow: 'hidden', shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 10,
     shadowOffset: { width: 0, height: -4 }, elevation: 10,
   },
-  iconActive: { backgroundColor: '#56B96B', borderRadius: 100 },
-  iconInActive: { backgroundColor: '#fff', borderRadius: 100 },
-  label: { fontSize: 10, color: '#000' },
-  labelActive: { color: '#56B96B', fontWeight: '600' },
+  iconActive: { borderRadius: 100 },
+  iconInActive: { borderRadius: 100 },
+  label: { fontSize: 10 },
+  labelActive: { color: '#56B96B', fontWeight: '600' }, // intentionally static
   pressed: { opacity: 0.7 },
 });
 
@@ -180,6 +182,12 @@ const AppContent = () => {
 /* ── Drawer shell — exact bestInfra pattern ── */
 const AppWithDrawer = () => {
   const { progress, isOpen, closeDrawer } = useDrawer();
+  const { theme } = useThemeMode();
+
+  /* Sync drawer state to global status bar state */
+  useEffect(() => {
+    statusBarState.setDrawerOpen(isOpen);
+  }, [isOpen]);
 
   /* Menu layer: slides in from left, fades in */
   const menuTranslateX = progress.interpolate({ inputRange: [0, 1], outputRange: [-28, 0] });
@@ -194,7 +202,7 @@ const AppWithDrawer = () => {
   const backdropTranslateX = progress.interpolate({ inputRange: [0, 1], outputRange: [42, 0] });
 
   return (
-    <View style={styles.drawerRoot}>
+    <View style={[styles.drawerRoot, { backgroundColor: theme.colors.drawerBackground }]}>
       {/* Menu layer */}
       <Animated.View
         pointerEvents={isOpen ? 'auto' : 'none'}
@@ -218,8 +226,8 @@ const AppWithDrawer = () => {
           },
         ]}
       >
-        <View style={[styles.backdropTop, { height: Math.round(BACKPLATE_DARK_HEIGHT * HEIGHT_SCALE) }]} />
-        <View style={styles.backdropBottom} />
+        <View style={[styles.backdropTop, { height: Math.round(BACKPLATE_DARK_HEIGHT * HEIGHT_SCALE), backgroundColor: theme.colors.drawerBackground }]} />
+        <View style={[styles.backdropBottom, { backgroundColor: theme.mode === 'dark' ? 'rgba(6, 14, 30, 0.95)' : 'rgba(184, 197, 223, 0.95)' }]} />
       </Animated.View>
 
       {/* Content layer — style toggle matches bestInfra exactly */}
@@ -273,7 +281,7 @@ const RootNavigator = () => {
 };
 
 const styles = StyleSheet.create({
-  drawerRoot: { flex: 1, backgroundColor: '#143F93' },
+  drawerRoot: { flex: 1 },
   menuLayer: { ...StyleSheet.absoluteFillObject, zIndex: 1 },
   contentLayer: {
     ...StyleSheet.absoluteFillObject, zIndex: 4,
@@ -293,7 +301,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 0, borderBottomRightRadius: 0,
     backgroundColor: 'transparent',
   },
-  backdropTop: { width: '100%', backgroundColor: '#1B448F' },
+  backdropTop: { width: '100%' },
   backdropBottom: { flex: 1, width: '100%', backgroundColor: 'rgba(184, 197, 223, 0.95)' },
   tapOverlay: { ...StyleSheet.absoluteFillObject, zIndex: 100 },
 });

@@ -15,6 +15,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 
+import { useThemeMode } from '../context/ThemeContext';
+
 const { width, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const RING_SIZES = [180, 240, 300, 360, 420];
@@ -38,6 +40,7 @@ const slides = [
 ];
 
 const OnboardingScreen = ({ navigation }) => {
+  const { theme } = useThemeMode();
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollRef = useRef(null);
   const arrowY = useRef(new Animated.Value(0)).current;
@@ -82,7 +85,7 @@ const OnboardingScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <View style={{flex: 1}}>
       <StatusBar style="light" />
       <ImageBackground source={require('../../assets/Background.png')} style={styles.bg} resizeMode="cover">
         {/* Rings — absolute, centered on logo area */}
@@ -90,7 +93,7 @@ const OnboardingScreen = ({ navigation }) => {
           {RING_SIZES.map((size) => (
             <View
               key={size}
-              style={[styles.ring, { width: size, height: size, borderRadius: size / 2 }]}
+              style={[styles.ring, { width: size, height: size, borderRadius: size / 2, borderColor: theme.colors.ringBorder }]}
             />
           ))}
         </View>
@@ -114,20 +117,20 @@ const OnboardingScreen = ({ navigation }) => {
 
                   {/* Text + action grouped together */}
                   <View style={styles.textContent}>
-                    <Text style={styles.title}>{slide.title}</Text>
-                    <Text style={styles.description}>{slide.description}</Text>
+                    <Text style={[styles.title, { color: theme.colors.settingsText }]}>{slide.title}</Text>
+                    <Text style={[styles.description, { color: theme.colors.onboardingText }]}>{slide.description}</Text>
 
                     <View style={styles.pagination}>
                       {slides.map((_, i) => (
                         <View
                           key={`dot-${i}`}
-                          style={[styles.dot, i === currentIndex ? styles.dotActive : styles.dotInactive]}
+                          style={[styles.dot, i === currentIndex ? [styles.dotActive, { backgroundColor: theme.colors.settingsText }] : styles.dotInactive]}
                         />
                       ))}
                     </View>
 
-                    <Pressable onPress={() => onNext(slideIndex)} style={styles.nextButton}>
-                      <Text style={styles.nextButtonText}>
+                    <Pressable onPress={() => onNext(slideIndex)} style={[styles.nextButton, { backgroundColor: theme.colors.success }]}>
+                      <Text style={[styles.nextButtonText, { color: theme.colors.settingsText }]}>
                         {slideIndex === slides.length - 1 ? 'Get Started' : 'Next'}
                       </Text>
                     </Pressable>
@@ -137,12 +140,12 @@ const OnboardingScreen = ({ navigation }) => {
                   <View style={styles.arrowArea}>
                     <Animated.View style={[styles.arrowWrap, { transform: [{ translateY: arrowY }] }]}>
                       <View style={styles.chevronRow}>
-                        <Ionicons name="chevron-up" size={18} color="#DFE7FF" />
-                        <Ionicons name="chevron-up" size={18} color="#DFE7FF" style={styles.chevronOverlay} />
+                        <Ionicons name="chevron-up" size={18} color={theme.colors.onboardingText} />
+                        <Ionicons name="chevron-up" size={18} color={theme.colors.onboardingText} style={styles.chevronOverlay} />
                       </View>
                       <View style={[styles.chevronRow, styles.arrowTop]}>
-                        <Ionicons name="chevron-up" size={18} color="#DFE7FF" />
-                        <Ionicons name="chevron-up" size={18} color="#DFE7FF" style={styles.chevronOverlay} />
+                        <Ionicons name="chevron-up" size={18} color={theme.colors.onboardingText} />
+                        <Ionicons name="chevron-up" size={18} color={theme.colors.onboardingText} style={styles.chevronOverlay} />
                       </View>
                     </Animated.View>
                   </View>
@@ -152,30 +155,29 @@ const OnboardingScreen = ({ navigation }) => {
           </View>
 
           {/* Login card pinned to bottom */}
-          <View style={styles.loginCard}>
-            <Text style={styles.loginHelp}>Don't have an account? Need Help!</Text>
-            <Pressable onPress={onLogin} style={styles.loginButton}>
-              <Text style={styles.loginButtonText}>Login</Text>
+          <View style={[styles.loginCard, { backgroundColor: theme.colors.loginCardBg, borderColor: theme.colors.ringBorder }]}>
+            <Text style={[styles.loginHelp, { color: theme.colors.onboardingText }]}>Don't have an account? Need Help!</Text>
+            <Pressable onPress={onLogin} style={[styles.loginButton, { backgroundColor: theme.colors.primaryDark }]}>
+              <Text style={[styles.loginButtonText, { color: theme.colors.settingsText }]}>Login</Text>
             </Pressable>
           </View>
         </View>
       </ImageBackground>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#222B71',
   },
   bg: {
     flex: 1,
-    paddingTop: "20%"
+    paddingTop: "25%"
   },
   ringsContainer: {
     position: 'absolute',
-    top: SCREEN_HEIGHT * 0.21,
+    top: SCREEN_HEIGHT * 0.23,
     left: 0,
     right: 0,
     alignItems: 'center',
@@ -214,7 +216,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    color: '#FFFFFF',
     fontSize: 24,
     fontWeight: '700',
     textAlign: 'center',
@@ -222,7 +223,6 @@ const styles = StyleSheet.create({
   },
   description: {
     marginTop: 16,
-    color: '#C8D4F0',
     fontSize: 13,
     lineHeight: 20,
     textAlign: 'center',
@@ -240,7 +240,6 @@ const styles = StyleSheet.create({
   },
   dotActive: {
     width: 28,
-    backgroundColor: '#FFFFFF',
   },
   dotInactive: {
     width: 8,
@@ -251,12 +250,10 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     height: 50,
     borderRadius: 10,
-    backgroundColor: '#55B66A',
     alignItems: 'center',
     justifyContent: 'center',
   },
   nextButtonText: {
-    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -284,18 +281,18 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   loginCard: {
-    marginHorizontal: 26,
-    marginBottom: 16,
+    marginHorizontal: "10%",
+    // marginBottom: 16,
     paddingTop: 16,
-    paddingBottom: 14,
-    paddingHorizontal: 20,
-    borderRadius: 10,
+    paddingBottom: "10%",
+    paddingHorizontal: "15%",
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
     backgroundColor: 'rgba(18, 62, 110, 0.65)',
     borderWidth: 1,
     borderColor: 'rgba(80, 140, 180, 0.2)',
   },
   loginHelp: {
-    color: '#C8DAFF',
     textAlign: 'center',
     fontSize: 13,
     marginBottom: 12,
@@ -303,12 +300,10 @@ const styles = StyleSheet.create({
   loginButton: {
     height: 46,
     borderRadius: 8,
-    backgroundColor: '#1D4694',
     alignItems: 'center',
     justifyContent: 'center',
   },
   loginButtonText: {
-    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '600',
   },

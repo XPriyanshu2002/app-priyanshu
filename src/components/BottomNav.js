@@ -3,6 +3,7 @@ import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useDrawer } from '../context/DrawerContext';
+import { useThemeMode } from '../context/ThemeContext';
 
 const TABS = [
   { key: 'Dashboard', label: 'Home', icon: 'home-outline', filled: 'home' },
@@ -14,6 +15,7 @@ const TABS = [
 
 const BottomNav = ({ navigation, activeIndex = 0 }) => {
   const { progress } = useDrawer();
+  const { theme } = useThemeMode();
 
   const animStyle = useAnimatedStyle(() => {
     const p = progress.value;
@@ -24,16 +26,16 @@ const BottomNav = ({ navigation, activeIndex = 0 }) => {
   });
 
   return (
-    <Animated.View style={[styles.bottomNav, animStyle]}>
+    <Animated.View style={[styles.bottomNav, { backgroundColor: theme.colors.tabInactive }, animStyle]}>
       {TABS.map((tab, i) => {
         const active = i === activeIndex;
         return (
           <Pressable key={tab.label} onPress={() => navigation.navigate(tab.key)}
             style={({ pressed }) => [styles.bottomItem, pressed && styles.pressed]}>
-            <View style={[styles.iconWrap, active && styles.iconActive]}>
-              <Ionicons name={active ? tab.filled : tab.icon} size={18} color={active ? '#FFFFFF' : '#56B769'} />
+            <View style={[styles.iconWrap, active && [styles.iconActive, { backgroundColor: theme.colors.tabActive }]]}>
+              <Ionicons name={active ? tab.filled : tab.icon} size={18} color={active ? theme.colors.tabIconActive : theme.colors.tabIconInactive} />
             </View>
-            <Text style={[styles.label, active && styles.labelActive]}>{tab.label}</Text>
+            <Text style={[styles.label, { color: theme.colors.textMuted }, active && { color: theme.colors.tabActive, fontWeight: '600' }]}>{tab.label}</Text>
           </Pressable>
         );
       })}
@@ -44,7 +46,7 @@ const BottomNav = ({ navigation, activeIndex = 0 }) => {
 const styles = StyleSheet.create({
   bottomNav: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
-    flexDirection: 'row', backgroundColor: '#FFFFFF',
+    flexDirection: 'row',
     paddingVertical: 8, paddingBottom: Platform.OS === 'ios' ? 24 : 10,
     borderTopLeftRadius: 16, borderTopRightRadius: 16,
     shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 10,
@@ -55,9 +57,8 @@ const styles = StyleSheet.create({
     width: 34, height: 34, borderRadius: 17,
     alignItems: 'center', justifyContent: 'center',
   },
-  iconActive: { backgroundColor: '#56B96B', borderRadius: '100%' },
-  label: { fontSize: 10, color: '#8A9BA8' },
-  labelActive: { color: '#56B96B', fontWeight: '600' },
+  iconActive: { borderRadius: 17 },
+  label: { fontSize: 10 },
   pressed: { opacity: 0.7 },
 });
 

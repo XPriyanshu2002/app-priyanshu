@@ -4,9 +4,10 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { useThemeMode } from '../context/ThemeContext';
 import AppHeader from '../components/AppHeader';
+import Rings from '../components/Rings';
 
 const SettingsScreen = ({ navigation }) => {
-  const { mode, toggleTheme } = useThemeMode();
+  const { mode, theme, toggleTheme } = useThemeMode();
   const entrance = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -18,11 +19,12 @@ const SettingsScreen = ({ navigation }) => {
   }, [entrance]);
 
   return (
-    <View style={styles.safeArea}>
+    <View style={[styles.safeArea, { backgroundColor: theme.colors.settingsBackground }]}>
       <Animated.View
         style={[
           styles.root,
           {
+            backgroundColor: theme.colors.settingsBackground,
             opacity: entrance,
             transform: [
               {
@@ -35,23 +37,14 @@ const SettingsScreen = ({ navigation }) => {
           },
         ]}
       >
-        {[150, 215, 280, 345].map((size) => (
-          <View key={size} style={[styles.ring, { width: size, height: size, borderRadius: size / 2 }]} />
-        ))}
+        <Rings top={-220} />
 
-        {/* <AppHeader
-          navigation={navigation}
-          rightIcon="chevron-back-outline"
-          rightOnPress={() => navigation.goBack()}
-          screenName="Settings"
-        /> */}
+        {/* <Text style={[styles.sectionTitle, { color: theme.colors.settingsTextMuted }]}>PREFERENCES</Text> */}
 
-        <Text style={styles.sectionTitle}>PREFERENCES</Text>
-
-        <View style={styles.optionCard}>
+        <View style={[styles.optionCard, { backgroundColor: theme.colors.settingsCard }]}>
           <View style={styles.optionLeft}>
-            <Ionicons name="settings-outline" size={20} color="#E2EDFF" />
-            <Text style={styles.optionLabel}>Dark Mode</Text>
+            <Ionicons name="settings-outline" size={20} color={theme.colors.settingsIcon} />
+            <Text style={[styles.optionLabel, { color: theme.colors.settingsText }]}>Dark Mode</Text>
           </View>
           <Switch
             value={mode === 'dark'}
@@ -61,31 +54,31 @@ const SettingsScreen = ({ navigation }) => {
           />
         </View>
 
-        <View style={styles.optionCard}>
+        <View style={[styles.optionCard, { backgroundColor: theme.colors.settingsCard }]}>
           <View style={styles.optionLeft}>
-            <Ionicons name="text-outline" size={20} color="#E2EDFF" />
+            <Ionicons name="text-outline" size={20} color={theme.colors.settingsIcon} />
             <View>
-              <Text style={styles.optionLabel}>Font Size</Text>
-              <Text style={styles.optionSub}>13 Px.</Text>
+              <Text style={[styles.optionLabel, { color: theme.colors.settingsText }]}>Font Size</Text>
+              <Text style={[styles.optionSub, { color: theme.colors.settingsTextMuted }]}>13 Px.</Text>
             </View>
           </View>
-          <Ionicons name="chevron-forward-outline" size={20} color="#B9D0FF" />
+          <Ionicons name="chevron-forward-outline" size={20} color={theme.colors.settingsChevron} />
         </View>
 
-        <Pressable style={({ pressed }) => [styles.optionCard, pressed ? styles.pressed : null]}>
+        <Pressable style={({ pressed }) => [styles.optionCard, { backgroundColor: theme.colors.settingsCard }, pressed ? styles.pressed : null]}>
           <View style={styles.optionLeft}>
-            <Ionicons name="information-circle-outline" size={20} color="#E2EDFF" />
-            <Text style={styles.optionLabel}>Terms of Service</Text>
+            <Ionicons name="information-circle-outline" size={20} color={theme.colors.settingsIcon} />
+            <Text style={[styles.optionLabel, { color: theme.colors.settingsText }]}>Terms of Service</Text>
           </View>
-          <Ionicons name="chevron-forward-outline" size={20} color="#B9D0FF" />
+          <Ionicons name="chevron-forward-outline" size={20} color={theme.colors.settingsChevron} />
         </Pressable>
 
-        <Pressable style={({ pressed }) => [styles.optionCard, pressed ? styles.pressed : null]}>
+        <Pressable style={({ pressed }) => [styles.optionCard, { backgroundColor: theme.colors.settingsCard }, pressed ? styles.pressed : null]}>
           <View style={styles.optionLeft}>
-            <Ionicons name="information-circle-outline" size={20} color="#E2EDFF" />
-            <Text style={styles.optionLabel}>Privacy Policy</Text>
+            <Ionicons name="information-circle-outline" size={20} color={theme.colors.settingsIcon} />
+            <Text style={[styles.optionLabel, { color: theme.colors.settingsText }]}>Privacy Policy</Text>
           </View>
-          <Ionicons name="chevron-forward-outline" size={20} color="#B9D0FF" />
+          <Ionicons name="chevron-forward-outline" size={20} color={theme.colors.settingsChevron} />
         </Pressable>
       </Animated.View>
     </View>
@@ -95,21 +88,12 @@ const SettingsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#123378',
   },
   root: {
     flex: 1,
-    backgroundColor: '#123378',
     paddingHorizontal: 14,
     paddingTop: 8,
-    marginTop: "20%",
-  },
-  ring: {
-    position: 'absolute',
-    top: -74,
-    alignSelf: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(133, 165, 223, 0.14)',
+    marginTop: "30%",
   },
   topRow: {
     flexDirection: 'row',
@@ -125,12 +109,11 @@ const styles = StyleSheet.create({
     width: 62,
     height: 62,
     borderRadius: 31,
-    backgroundColor: '#F5F7FF',
+    backgroundColor: '#F5F7FF', // intentionally static
     alignItems: 'center',
     justifyContent: 'center',
   },
   sectionTitle: {
-    color: '#90ABD8',
     fontSize: 15,
     letterSpacing: 1,
     marginBottom: 10,
@@ -140,7 +123,6 @@ const styles = StyleSheet.create({
     minHeight: 56,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    backgroundColor: 'rgba(46, 82, 149, 0.85)',
     borderWidth: 1,
     borderColor: 'rgba(116, 146, 209, 0.3)',
     flexDirection: 'row',
@@ -154,13 +136,11 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   optionLabel: {
-    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '500',
   },
   optionSub: {
     marginTop: 2,
-    color: '#9FC0F6',
     fontSize: 12,
   },
   pressed: {

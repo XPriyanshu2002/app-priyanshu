@@ -16,8 +16,10 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { LineChart } from 'react-native-gifted-charts';
 
 import { useAuth } from '../context/AuthContext';
+import { useThemeMode } from '../context/ThemeContext';
 import * as dashboardService from '../services/dashboardService';
 import { formatCurrency } from '../utils/formatters';
+import Rings from '../components/Rings';
 
 const { width: SW } = Dimensions.get('window');
 const TIME_FILTERS = ['7D', '30D', '90D', '1Y'];
@@ -53,7 +55,7 @@ const abbreviateDate = (raw) => {
 };
 
 /* Skeleton placeholder */
-const Skeleton = ({ width: w, height: h, style, borderRadius: br }) => {
+const Skeleton = ({ width: w, height: h, style, borderRadius: br, skeletonColor }) => {
   const pulse = useRef(new Animated.Value(0.3)).current;
   useEffect(() => {
     const a = Animated.loop(Animated.sequence([
@@ -63,12 +65,13 @@ const Skeleton = ({ width: w, height: h, style, borderRadius: br }) => {
     a.start();
     return () => a.stop();
   }, [pulse]);
-  return <Animated.View style={[{ width: w, height: h, borderRadius: br ?? 4, backgroundColor: '#E4EAF0', opacity: pulse }, style]} />;
+  return <Animated.View style={[{ width: w, height: h, borderRadius: br ?? 4, backgroundColor: skeletonColor, opacity: pulse }, style]} />;
 };
 
 const DashboardScreen = ({ navigation }) => {
   const { user } = useAuth();
-  const [timeRange, setTimeRange] = useState('30D');
+  const { theme } = useThemeMode();
+  const [timeRange, setTimeRange] = useState('7D');
   const [switching, setSwitching] = useState(false);
   const [dashboard, setDashboard] = useState(FALLBACK);
   const [chartMode, setChartMode] = useState('Bar');
@@ -152,29 +155,28 @@ const DashboardScreen = ({ navigation }) => {
   const alerts = (dashboard?.alerts?.length ? dashboard.alerts : FALLBACK_ALERTS).slice(0, 3);
 
   return (
-    // <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <View style={styles.safeArea}>
       <Animated.View style={[styles.animatedRoot, {
+        backgroundColor: theme.colors.screenBackground,
         opacity: entrance,
         transform: [{ translateY: entrance.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }],
       }]}>
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <Rings top="-12%" />
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} style={{ backgroundColor: 'transparent' }}>
           {/* Hero */}
           <View style={styles.hero}>
-            {[120, 170, 220, 270, 320].map((s) => (
-              <View key={s} style={[styles.ring, { width: s, height: s, borderRadius: s / 2 }]} />
-            ))}
-            <Text style={styles.greeting}>Hi, {consumerName} 👋</Text>
-            <Text style={styles.tagline}>Staying efficient today?</Text>
+            <Text style={[styles.greeting, { color: theme.colors.text }]}>Hi, {consumerName} 👋</Text>
+            <Text style={[styles.tagline, { color: theme.colors.chipText }]}>Staying efficient today?</Text>
           </View>
 
           {/* Due strip */}
-          <View style={styles.dueStrip}>
+          <View style={[styles.dueStrip, { backgroundColor: theme.colors.primaryDark }]}>
             <Text style={styles.dueLabel}>Due Amount: {dueAmount}</Text>
             <Text style={styles.dueDate}>Due on {abbreviateDate(dashboard?.dueDate)}</Text>
           </View>
 
           {/* Pay card */}
-          <View style={styles.payCard}>
+          <View style={[styles.payCard, { backgroundColor: theme.colors.success }]}>
             <View style={styles.payCardLeft}>
               <View style={styles.payIconWrap}>
                 <Ionicons name="earth-outline" size={20} color="#FFFFFF" />
@@ -182,18 +184,18 @@ const DashboardScreen = ({ navigation }) => {
               <View style={styles.payCardTextWrap}>
                 <Text style={styles.payCardTitle}>Pay securely{'\n'}to stay on track.</Text>
                 <View style={styles.payCardSubRow}>
-                  <Text style={styles.payCardSub}>Avoid service disruption.</Text>
-                  <Text style={styles.payCardDays}>6 Days Left</Text>
+                  <Text style={[styles.payCardSub, { color: theme.colors.successMuted }]}>Avoid service disruption.</Text>
+                  <Text style={[styles.payCardDays, { color: theme.colors.successMuted }]}>6 Days Left</Text>
                 </View>
               </View>
             </View>
-            <Pressable style={({ pressed }) => [styles.payNowBtn, pressed && styles.pressed]}>
-              <Text style={styles.payNowText}>Pay Now</Text>
+            <Pressable style={({ pressed }) => [styles.payNowBtn, { backgroundColor: theme.colors.cardBackground }, pressed && styles.pressed]}>
+              <Text style={[styles.payNowText, { color: theme.colors.primaryDark }]}>Pay Now</Text>
             </Pressable>
           </View>
 
           {/* Communication card */}
-          <View style={styles.commCard}>
+          <View style={[styles.commCard, { backgroundColor: theme.colors.primaryDark }]}>
             <View style={styles.commLeft}>
               <View style={styles.commTopRow}>
                 <View style={styles.commIcon}>
@@ -202,7 +204,7 @@ const DashboardScreen = ({ navigation }) => {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.commTitle}>GMR AERO TOWER{'\n'}2 INCOMER</Text>
                 </View>
-                <View style={styles.tapBadge}>
+                <View style={[styles.tapBadge, { backgroundColor: theme.colors.success }]}>
                   <Text style={styles.tapBadgeText}>Tap for Details</Text>
                 </View>
               </View>
@@ -218,12 +220,12 @@ const DashboardScreen = ({ navigation }) => {
           </View>
 
           {/* Energy Summary */}
-          <View style={styles.summaryCard}>
+          <View style={[styles.summaryCard, { backgroundColor: theme.colors.cardBackground }]}>
             <View style={styles.summaryHeader}>
-              <Text style={styles.summaryTitle}>Energy Summary</Text>
-              <Pressable style={styles.datePicker} onPress={() => setShowDatePicker(true)}>
-                <Text style={styles.datePickerText}>Pick a Date</Text>
-                <Ionicons name="calendar-outline" size={14} color="#1F4B97" />
+              <Text style={[styles.summaryTitle, { color: theme.colors.text }]}>Energy Summary</Text>
+              <Pressable style={[styles.datePicker, { backgroundColor: theme.colors.chipBackground }]} onPress={() => setShowDatePicker(true)}>
+                <Text style={[styles.datePickerText, { color: theme.colors.primaryDark }]}>Pick a Date</Text>
+                <Ionicons name="calendar-outline" size={14} color={theme.colors.primaryDark} />
               </Pressable>
             </View>
 
@@ -232,27 +234,27 @@ const DashboardScreen = ({ navigation }) => {
               {switching ? (
                 <View>
                   <View style={styles.usageTopRow}>
-                    <Skeleton width={130} height={14} />
-                    <Skeleton width={60} height={22} borderRadius={4} />
+                    <Skeleton width={130} height={14} skeletonColor={theme.colors.skeletonBase} />
+                    <Skeleton width={60} height={22} borderRadius={4} skeletonColor={theme.colors.skeletonBase} />
                   </View>
-                  <Skeleton width={100} height={18} style={{ marginTop: 8 }} />
-                  <Skeleton width={80} height={12} style={{ marginTop: 4 }} />
+                  <Skeleton width={100} height={18} style={{ marginTop: 8 }} skeletonColor={theme.colors.skeletonBase} />
+                  <Skeleton width={80} height={12} style={{ marginTop: 4 }} skeletonColor={theme.colors.skeletonBase} />
                 </View>
               ) : (
                 <Animated.View style={{ opacity: contentOpacity, transform: [{ translateY: contentSlide }] }}>
                   <View style={styles.usageTopRow}>
-                    <Text style={styles.usageLabel}>This Month's Usage:</Text>
+                    <Text style={[styles.usageLabel, { color: theme.colors.chipText }]}>This Month's Usage:</Text>
                     <View style={{ position: 'relative', zIndex: 10 }}>
-                      <Pressable style={styles.chartToggle} onPress={() => setChartDropOpen((v) => !v)}>
-                        <Text style={styles.chartToggleText}>{chartMode}</Text>
-                        <Ionicons name={chartDropOpen ? 'chevron-up-outline' : 'chevron-down-outline'} size={12} color="#1F4B97" />
+                      <Pressable style={[styles.chartToggle, { backgroundColor: theme.colors.chipBackground }]} onPress={() => setChartDropOpen((v) => !v)}>
+                        <Text style={[styles.chartToggleText, { color: theme.colors.primaryDark }]}>{chartMode}</Text>
+                        <Ionicons name={chartDropOpen ? 'chevron-up-outline' : 'chevron-down-outline'} size={12} color={theme.colors.primaryDark} />
                       </Pressable>
                       {chartDropOpen && (
-                        <View style={styles.chartDropdown}>
+                        <View style={[styles.chartDropdown, { backgroundColor: theme.colors.cardBackground }]}>
                           {CHART_MODES.map((m) => (
-                            <Pressable key={m} style={[styles.chartDropItem, m === chartMode && styles.chartDropItemActive]}
+                            <Pressable key={m} style={[styles.chartDropItem, m === chartMode && [styles.chartDropItemActive, { backgroundColor: theme.colors.chipBackground }]]}
                               onPress={() => { setChartMode(m); setChartDropOpen(false); }}>
-                              <Text style={[styles.chartDropText, m === chartMode && styles.chartDropTextActive]}>{m}</Text>
+                              <Text style={[styles.chartDropText, { color: theme.colors.chipText }, m === chartMode && [styles.chartDropTextActive, { color: theme.colors.primaryDark }]]}>{m}</Text>
                             </Pressable>
                           ))}
                         </View>
@@ -260,13 +262,13 @@ const DashboardScreen = ({ navigation }) => {
                     </View>
                   </View>
                   <View style={styles.usageValueRow}>
-                    <Text style={styles.usageValue}>{Math.round(totalUsage)} kWh</Text>
-                    <View style={styles.percentBadge}>
+                    <Text style={[styles.usageValue, { color: theme.colors.text }]}>{Math.round(totalUsage)} kWh</Text>
+                    <View style={[styles.percentBadge, { backgroundColor: theme.colors.success }]}>
                       <Text style={styles.percentText}>10%</Text>
                       <Ionicons name="trending-up-outline" size={10} color="#FFFFFF" />
                     </View>
                   </View>
-                  <Text style={styles.usageSub}>vs. Last Month.</Text>
+                  <Text style={[styles.usageSub, { color: theme.colors.textMuted }]}>vs. Last Month.</Text>
                 </Animated.View>
               )}
             </View>
@@ -274,9 +276,9 @@ const DashboardScreen = ({ navigation }) => {
             {/* Filters */}
             <View style={styles.filtersRow}>
               {TIME_FILTERS.map((f) => (
-                <Pressable key={f} style={[styles.filterChip, f === timeRange && styles.filterChipActive]}
+                <Pressable key={f} style={[styles.filterChip, { backgroundColor: theme.colors.chipBackground }, f === timeRange && { backgroundColor: theme.colors.primaryDark }]}
                   onPress={() => handleFilterPress(f)}>
-                  <Text style={[styles.filterText, f === timeRange && styles.filterTextActive]}>{f}</Text>
+                  <Text style={[styles.filterText, { color: theme.colors.chipText }, f === timeRange && styles.filterTextActive]}>{f}</Text>
                 </Pressable>
               ))}
             </View>
@@ -287,8 +289,8 @@ const DashboardScreen = ({ navigation }) => {
                 <View style={styles.skeletonChartRow}>
                   {Array.from({ length: 10 }).map((_, i) => (
                     <View key={i} style={styles.skeletonBarCol}>
-                      <Skeleton width={18} height={25 + (i % 3) * 25} />
-                      <Skeleton width={22} height={8} style={{ marginTop: 6 }} />
+                      <Skeleton width={18} height={25 + (i % 3) * 25} skeletonColor={theme.colors.skeletonBase} />
+                      <Skeleton width={22} height={8} style={{ marginTop: 6 }} skeletonColor={theme.colors.skeletonBase} />
                     </View>
                   ))}
                 </View>
@@ -301,10 +303,10 @@ const DashboardScreen = ({ navigation }) => {
                         return (
                           <View key={p.label} style={styles.chartCol}>
                             <View style={styles.chartBarContainer}>
-                              <View style={[styles.chartBarOuter, { height: h }]} />
-                              <View style={[styles.chartBarInner, { height: h * 0.85 }]} />
+                              <View style={[styles.chartBarOuter, { height: h, backgroundColor: theme.colors.chartBarOuter }]} />
+                              <View style={[styles.chartBarInner, { height: h * 0.85, backgroundColor: theme.colors.primaryDark }]} />
                             </View>
-                            <Text style={styles.chartLabel}>{p.label}</Text>
+                            <Text style={[styles.chartLabel, { color: theme.colors.textMuted }]}>{p.label}</Text>
                           </View>
                         );
                       })}
@@ -316,21 +318,21 @@ const DashboardScreen = ({ navigation }) => {
                         width={SW - 90}
                         height={110}
                         spacing={(SW - 120) / Math.max(lineData.length - 1, 1)}
-                        color="#1E4694"
+                        color={theme.colors.primaryDark}
                         thickness={2.5}
                         startFillColor="rgba(30,70,148,0.18)"
                         endFillColor="rgba(30,70,148,0.01)"
                         areaChart
                         curved
                         hideDataPoints={false}
-                        dataPointsColor="#1E4694"
+                        dataPointsColor={theme.colors.primaryDark}
                         dataPointsRadius={3}
-                        xAxisColor="#E8ECF0"
+                        xAxisColor={theme.colors.progressBackground}
                         yAxisColor="transparent"
-                        yAxisTextStyle={{ fontSize: 9, color: '#8A9BA8' }}
-                        xAxisLabelTextStyle={{ fontSize: 8, color: '#8A9BA8' }}
+                        yAxisTextStyle={{ fontSize: 9, color: theme.colors.textMuted }}
+                        xAxisLabelTextStyle={{ fontSize: 8, color: theme.colors.textMuted }}
                         noOfSections={4}
-                        rulesColor="#F0F2F4"
+                        rulesColor={theme.colors.progressBackground}
                         rulesType="solid"
                         hideYAxisText={false}
                         initialSpacing={8}
@@ -347,89 +349,89 @@ const DashboardScreen = ({ navigation }) => {
           {/* Metrics */}
           {switching ? (
             <View style={styles.metricsRow}>
-              <View style={styles.metricCard}>
-                <Skeleton width={80} height={12} />
-                <Skeleton width={110} height={20} style={{ marginTop: 6 }} />
+              <View style={[styles.metricCard, { backgroundColor: theme.colors.cardBackground }]}>
+                <Skeleton width={80} height={12} skeletonColor={theme.colors.skeletonBase} />
+                <Skeleton width={110} height={20} style={{ marginTop: 6 }} skeletonColor={theme.colors.skeletonBase} />
               </View>
-              <View style={styles.metricCard}>
-                <Skeleton width={70} height={12} />
-                <Skeleton width={80} height={20} style={{ marginTop: 6 }} />
+              <View style={[styles.metricCard, { backgroundColor: theme.colors.cardBackground }]}>
+                <Skeleton width={70} height={12} skeletonColor={theme.colors.skeletonBase} />
+                <Skeleton width={80} height={20} style={{ marginTop: 6 }} skeletonColor={theme.colors.skeletonBase} />
               </View>
             </View>
           ) : (
             <Animated.View style={[styles.metricsRow, { opacity: contentOpacity, transform: [{ translateY: contentSlide }] }]}>
-              <View style={styles.metricCard}>
-                <Text style={styles.metricTitle}>Average Daily</Text>
-                <Text style={styles.metricValue}>{avgDaily.toFixed(3)} kWh</Text>
+              <View style={[styles.metricCard, { backgroundColor: theme.colors.cardBackground }]}>
+                <Text style={[styles.metricTitle, { color: theme.colors.chipText }]}>Average Daily</Text>
+                <Text style={[styles.metricValue, { color: theme.colors.text }]}>{avgDaily.toFixed(3)} kWh</Text>
               </View>
-              <View style={styles.metricCard}>
-                <Text style={styles.metricTitle}>Peak Usage</Text>
-                <Text style={[styles.metricValue, styles.peakValue]}>{Math.round(peakUsage)} kWh</Text>
+              <View style={[styles.metricCard, { backgroundColor: theme.colors.cardBackground }]}>
+                <Text style={[styles.metricTitle, { color: theme.colors.chipText }]}>Peak Usage</Text>
+                <Text style={[styles.metricValue, styles.peakValue, { color: theme.colors.danger }]}>{Math.round(peakUsage)} kWh</Text>
               </View>
             </Animated.View>
           )}
 
           {/* Comparison */}
           {switching ? (
-            <View style={styles.compareCard}>
+            <View style={[styles.compareCard, { backgroundColor: theme.colors.cardBackground }]}>
               <View style={styles.compareHeaderRow}>
-                <Skeleton width={14} height={14} borderRadius={7} />
-                <Skeleton width={80} height={14} />
+                <Skeleton width={14} height={14} borderRadius={7} skeletonColor={theme.colors.skeletonBase} />
+                <Skeleton width={80} height={14} skeletonColor={theme.colors.skeletonBase} />
               </View>
               <View style={styles.compareRow}>
                 <View>
-                  <Skeleton width={70} height={10} />
-                  <Skeleton width={100} height={20} style={{ marginTop: 6 }} />
+                  <Skeleton width={70} height={10} skeletonColor={theme.colors.skeletonBase} />
+                  <Skeleton width={100} height={20} style={{ marginTop: 6 }} skeletonColor={theme.colors.skeletonBase} />
                 </View>
                 <View style={styles.compareRight}>
-                  <Skeleton width={70} height={10} />
-                  <Skeleton width={100} height={20} style={{ marginTop: 6 }} />
+                  <Skeleton width={70} height={10} skeletonColor={theme.colors.skeletonBase} />
+                  <Skeleton width={100} height={20} style={{ marginTop: 6 }} skeletonColor={theme.colors.skeletonBase} />
                 </View>
               </View>
-              <Skeleton width="100%" height={8} style={{ marginTop: 10 }} borderRadius={4} />
+              <Skeleton width="100%" height={8} style={{ marginTop: 10 }} borderRadius={4} skeletonColor={theme.colors.skeletonBase} />
               <View style={[styles.savedRow, { marginTop: 6 }]}>
-                <Skeleton width={130} height={12} />
+                <Skeleton width={130} height={12} skeletonColor={theme.colors.skeletonBase} />
               </View>
             </View>
           ) : (
-            <Animated.View style={[styles.compareCard, { opacity: contentOpacity, transform: [{ translateY: contentSlide }] }]}>
+            <Animated.View style={[styles.compareCard, { backgroundColor: theme.colors.cardBackground, opacity: contentOpacity, transform: [{ translateY: contentSlide }] }]}>
               <View style={styles.compareHeaderRow}>
-                <Ionicons name="swap-horizontal-outline" size={14} color="#5B6973" />
-                <Text style={styles.compareTitle}>Comparison</Text>
+                <Ionicons name="swap-horizontal-outline" size={14} color={theme.colors.chipText} />
+                <Text style={[styles.compareTitle, { color: theme.colors.text }]}>Comparison</Text>
               </View>
               <View style={styles.compareRow}>
                 <View>
-                  <Text style={styles.compareLabel}>This Month</Text>
-                  <Text style={styles.compareStrong}>{Math.round(totalUsage).toLocaleString()} kWh</Text>
+                  <Text style={[styles.compareLabel, { color: theme.colors.textMuted }]}>This Month</Text>
+                  <Text style={[styles.compareStrong, { color: theme.colors.text }]}>{Math.round(totalUsage).toLocaleString()} kWh</Text>
                 </View>
                 <View style={styles.compareRight}>
-                  <Text style={styles.compareLabel}>Last Month</Text>
-                  <Text style={styles.compareMuted}>{lastMonthUsage.toLocaleString()} kWh</Text>
+                  <Text style={[styles.compareLabel, { color: theme.colors.textMuted }]}>Last Month</Text>
+                  <Text style={[styles.compareMuted, { color: theme.colors.textMuted }]}>{lastMonthUsage.toLocaleString()} kWh</Text>
                 </View>
               </View>
-              <View style={styles.progressBg}>
-                <View style={[styles.progressFill, { width: `${progressPercent}%` }]} />
+              <View style={[styles.progressBg, { backgroundColor: theme.colors.progressBackground }]}>
+                <View style={[styles.progressFill, { width: `${progressPercent}%`, backgroundColor: theme.colors.success }]} />
               </View>
               <View style={styles.savedRow}>
-                <Ionicons name="checkmark-circle-outline" size={13} color="#2A9C57" />
-                <Text style={styles.savedText}>You saved {savedKwh} kWh</Text>
+                <Ionicons name="checkmark-circle-outline" size={13} color={theme.colors.success} />
+                <Text style={[styles.savedText, { color: theme.colors.success }]}>You saved {savedKwh} kWh</Text>
               </View>
             </Animated.View>
           )}
 
           {/* Alerts */}
-          <View style={styles.alertsCard}>
-            <Text style={styles.alertsTitle}>Alerts</Text>
-            <View style={styles.alertHeader}>
-              <Text style={[styles.alertHeaderText, styles.colSerial]}>S. No</Text>
-              <Text style={[styles.alertHeaderText, styles.colMeter]}>Meter Sl No</Text>
-              <Text style={[styles.alertHeaderText, styles.colConsumer]}>Consumer Name</Text>
+          <View style={[styles.alertsCard, { backgroundColor: theme.colors.cardBackground }]}>
+            <Text style={[styles.alertsTitle, { color: theme.colors.text }]}>Alerts</Text>
+            <View style={[styles.alertHeader, { backgroundColor: theme.colors.chipBackground }]}>
+              <Text style={[styles.alertHeaderText, styles.colSerial, { color: theme.colors.chipText }]}>S. No</Text>
+              <Text style={[styles.alertHeaderText, styles.colMeter, { color: theme.colors.chipText }]}>Meter Sl No</Text>
+              <Text style={[styles.alertHeaderText, styles.colConsumer, { color: theme.colors.chipText }]}>Consumer Name</Text>
             </View>
             {alerts.map((item, i) => (
-              <View key={`${item.id}-${i}`} style={styles.alertRow}>
-                <Text style={[styles.alertCell, styles.colSerial]}>{i + 1}</Text>
-                <Text style={[styles.alertCell, styles.colMeter]}>• {item.meterSerialNumber}</Text>
-                <Text style={[styles.alertCell, styles.colConsumer]}>{item.consumerName}</Text>
+              <View key={`${item.id}-${i}`} style={[styles.alertRow, { borderBottomColor: theme.colors.border }]}>
+                <Text style={[styles.alertCell, styles.colSerial, { color: theme.colors.text }]}>{i + 1}</Text>
+                <Text style={[styles.alertCell, styles.colMeter, { color: theme.colors.text }]}>• {item.meterSerialNumber}</Text>
+                <Text style={[styles.alertCell, styles.colConsumer, { color: theme.colors.text }]}>{item.consumerName}</Text>
               </View>
             ))}
           </View>
@@ -439,14 +441,14 @@ const DashboardScreen = ({ navigation }) => {
         {Platform.OS === 'ios' ? (
           <Modal visible={showDatePicker} transparent animationType="slide">
             <View style={styles.dateModalOverlay}>
-              <View style={styles.dateModalContent}>
-                <View style={styles.dateModalHeader}>
+              <View style={[styles.dateModalContent, { backgroundColor: theme.colors.cardBackground }]}>
+                <View style={[styles.dateModalHeader, { borderBottomColor: theme.colors.border }]}>
                   <Pressable onPress={() => setShowDatePicker(false)}>
-                    <Text style={styles.dateModalCancel}>Cancel</Text>
+                    <Text style={[styles.dateModalCancel, { color: theme.colors.danger }]}>Cancel</Text>
                   </Pressable>
-                  <Text style={styles.dateModalTitle}>Pick a Date</Text>
+                  <Text style={[styles.dateModalTitle, { color: theme.colors.text }]}>Pick a Date</Text>
                   <Pressable onPress={() => setShowDatePicker(false)}>
-                    <Text style={styles.dateModalDone}>Done</Text>
+                    <Text style={[styles.dateModalDone, { color: theme.colors.primaryDark }]}>Done</Text>
                   </Pressable>
                 </View>
                 <DateTimePicker
@@ -470,38 +472,34 @@ const DashboardScreen = ({ navigation }) => {
           )
         )}
       </Animated.View>
-    // </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#EDF2EE' },
-  animatedRoot: { flex: 1 , backgroundColor: '#EDF2EE', },
-  content: { paddingHorizontal: 10, paddingBottom: 200, backgroundColor: '#EDF2EE', marginTop: "20%" },
+  safeArea: { flex: 1 },
+  animatedRoot: { flex: 1 },
+  content: { paddingHorizontal: 10, paddingBottom: 200, marginTop: "30%" },
 
   hero: {
-    marginTop: 4, backgroundColor: '#EAF0EC', borderRadius: 20,
-    paddingHorizontal: 14, paddingBottom: 16, overflow: 'hidden',
+    marginTop: 4, borderRadius: 20,
+    paddingHorizontal: 14, paddingBottom: 16,
   },
-  ring: {
-    position: 'absolute', alignSelf: 'center', top: 8,
-    borderWidth: 1, borderColor: 'rgba(143,170,193,0.18)',
-  },
-  greeting: { fontSize: 16, fontWeight: '700', color: '#151515' },
-  tagline: { fontSize: 13, color: '#45545E', marginTop: 2 },
+  greeting: { fontSize: 16, fontWeight: '700' },
+  tagline: { fontSize: 13, marginTop: 2 },
 
   dueStrip: {
-    marginTop: 8, height: 32, borderRadius: 6, backgroundColor: '#1D4694',
+    marginTop: 8, height: 32, borderRadius: 6,
     paddingHorizontal: 12, alignItems: 'center', flexDirection: 'row',
     justifyContent: 'space-between', shadowOpacity: 0.04,
     shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 2
   },
-  dueLabel: { color: '#FFFFFF', fontSize: 13, fontWeight: '600' },
-  dueDate: { color: '#C8D8FF', fontSize: 10 },
+  dueLabel: { color: '#FFFFFF', fontSize: 13, fontWeight: '600' }, // intentionally static
+  dueDate: { color: '#C8D8FF', fontSize: 10 }, // intentionally static
 
   payCard: {
-    marginTop: 8, backgroundColor: '#56B96B', borderRadius: 10,
-    padding: 12, flexDirection: 'row', alignItems: 'center',shadowOpacity: 0.04,
+    marginTop: 8, borderRadius: 10,
+    padding: 12, flexDirection: 'row', alignItems: 'center', shadowOpacity: 0.04,
     shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 2
   },
   payCardLeft: { flex: 1, flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
@@ -511,19 +509,19 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', marginTop: 2,
   },
   payCardTextWrap: { flex: 1 },
-  payCardTitle: { color: '#FFFFFF', fontWeight: '700', fontSize: 14, lineHeight: 20 },
+  payCardTitle: { color: '#FFFFFF', fontWeight: '700', fontSize: 14, lineHeight: 20 }, // intentionally static
   payCardSubRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 2 },
-  payCardSub: { color: '#D4F5DD', fontSize: 11 },
-  payCardDays: { color: '#D4F5DD', fontSize: 11, fontWeight: '600' },
+  payCardSub: { fontSize: 11 },
+  payCardDays: { fontSize: 11, fontWeight: '600' },
   payNowBtn: {
-    backgroundColor: '#FFFFFF', borderRadius: 6,
+    borderRadius: 6,
     paddingHorizontal: 16, paddingVertical: 10,
   },
-  payNowText: { color: '#1F4A95', fontWeight: '700', fontSize: 12 },
+  payNowText: { fontWeight: '700', fontSize: 12 },
 
   commCard: {
-    marginTop: 8, backgroundColor: '#1E4694', borderRadius: 10,
-    padding: 12, flexDirection: 'row', justifyContent: 'space-between',shadowOpacity: 0.04,
+    marginTop: 8, borderRadius: 10,
+    padding: 12, flexDirection: 'row', justifyContent: 'space-between', shadowOpacity: 0.04,
     shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 2
   },
   commLeft: { flex: 1 },
@@ -533,16 +531,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center', justifyContent: 'center',
   },
-  commTitle: { color: '#FFFFFF', fontSize: 11, fontWeight: '700', lineHeight: 15 },
-  tapBadge: { backgroundColor: '#57B96B', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3 },
-  tapBadgeText: { color: '#FFFFFF', fontSize: 9, fontWeight: '600' },
-  commSub: { color: '#C8D8FF', fontSize: 10, marginTop: 4 },
+  commTitle: { color: '#FFFFFF', fontSize: 11, fontWeight: '700', lineHeight: 15 }, // intentionally static
+  tapBadge: { borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3 },
+  tapBadgeText: { color: '#FFFFFF', fontSize: 9, fontWeight: '600' }, // intentionally static
+  commSub: { color: '#C8D8FF', fontSize: 10, marginTop: 4 }, // intentionally static
   commRight: { alignItems: 'flex-end', justifyContent: 'center' },
   meterRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  meterNum: { color: '#F3F7FF', fontSize: 14, fontWeight: '700' },
+  meterNum: { color: '#F3F7FF', fontSize: 14, fontWeight: '700' }, // intentionally static
 
   summaryCard: {
-    marginTop: 8, backgroundColor: '#FFFFFF', borderRadius: 12,
+    marginTop: 8, borderRadius: 12,
     padding: 14, shadowColor: '#000', shadowOpacity: 0.04,
     shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
@@ -550,56 +548,56 @@ const styles = StyleSheet.create({
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     marginBottom: 10,
   },
-  summaryTitle: { fontSize: 15, fontWeight: '700', color: '#151515' },
+  summaryTitle: { fontSize: 15, fontWeight: '700' },
   datePicker: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: '#EDF3FF', borderRadius: 6,
+    borderRadius: 6,
     paddingHorizontal: 10, paddingVertical: 5,
   },
-  datePickerText: { fontSize: 11, color: '#1F4B97', fontWeight: '600' },
+  datePickerText: { fontSize: 11, fontWeight: '600' },
 
   usageBox: { marginBottom: 10, zIndex: 20, position: 'relative' },
   usageTopRow: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
   },
-  usageLabel: { fontSize: 12, color: '#5B6973', fontWeight: '500' },
+  usageLabel: { fontSize: 12, fontWeight: '500' },
   chartToggle: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: '#EDF3FF', borderRadius: 6,
+    borderRadius: 6,
     paddingHorizontal: 10, paddingVertical: 4,
   },
-  chartToggleText: { fontSize: 11, color: '#1F4B97', fontWeight: '600' },
+  chartToggleText: { fontSize: 11, fontWeight: '600' },
   chartDropdown: {
-    position: 'absolute', top: 28, right: 0, backgroundColor: '#FFFFFF',
+    position: 'absolute', top: 28, right: 0,
     borderRadius: 8, paddingVertical: 4, minWidth: 80,
     shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 }, elevation: 6, zIndex: 20,
   },
   chartDropItem: { paddingHorizontal: 12, paddingVertical: 7 },
-  chartDropItemActive: { backgroundColor: '#EDF3FF' },
-  chartDropText: { fontSize: 12, color: '#5B6973' },
-  chartDropTextActive: { color: '#1F4B97', fontWeight: '600' },
+  chartDropItemActive: {},
+  chartDropText: { fontSize: 12 },
+  chartDropTextActive: { fontWeight: '600' },
 
   usageValueRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
-  usageValue: { fontSize: 22, fontWeight: '800', color: '#151515' },
+  usageValue: { fontSize: 22, fontWeight: '800' },
   percentBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 3,
-    backgroundColor: '#56B96B', borderRadius: 10,
+    borderRadius: 10,
     paddingHorizontal: 7, paddingVertical: 2,
   },
-  percentText: { fontSize: 10, color: '#FFFFFF', fontWeight: '700' },
-  usageSub: { fontSize: 11, color: '#8A9BA8', marginTop: 2 },
+  percentText: { fontSize: 10, color: '#FFFFFF', fontWeight: '700' }, // intentionally static
+  usageSub: { fontSize: 11, marginTop: 2 },
 
   filtersRow: {
     flexDirection: 'row', gap: 6, marginBottom: 10,
   },
   filterChip: {
     flex: 1, alignItems: 'center', paddingVertical: 6,
-    borderRadius: 6, backgroundColor: '#F4F6F8',
+    borderRadius: 6,
   },
-  filterChipActive: { backgroundColor: '#1E4694' },
-  filterText: { fontSize: 11, fontWeight: '600', color: '#5B6973' },
-  filterTextActive: { color: '#FFFFFF' },
+  filterChipActive: {},
+  filterText: { fontSize: 11, fontWeight: '600' },
+  filterTextActive: { color: '#FFFFFF' }, // intentionally static
 
   chartAreaFixed: { height: 150, justifyContent: 'center', position: 'relative' },
   chartAreaInner: { flex: 1, justifyContent: 'center' },
@@ -610,14 +608,14 @@ const styles = StyleSheet.create({
   chartCol: { alignItems: 'center', flex: 1 },
   chartBarContainer: { alignItems: 'center', justifyContent: 'flex-end', width: '100%' },
   chartBarOuter: {
-    width: 14, borderRadius: 4, backgroundColor: '#D6E4F0',
+    width: 14, borderRadius: 4,
     position: 'absolute', bottom: 0,
   },
   chartBarInner: {
-    width: 14, borderRadius: 4, backgroundColor: '#1E4694',
+    width: 14, borderRadius: 4,
     position: 'absolute', bottom: 0,
   },
-  chartLabel: { fontSize: 9, color: '#8A9BA8', marginTop: 4, position: 'absolute', bottom: -16 },
+  chartLabel: { fontSize: 9, marginTop: 4, position: 'absolute', bottom: -16 },
 
   skeletonChartRow: {
     flexDirection: 'row', alignItems: 'flex-end',
@@ -633,56 +631,56 @@ const styles = StyleSheet.create({
     flexDirection: 'row', gap: 8, marginTop: 8,
   },
   metricCard: {
-    flex: 1, backgroundColor: '#FFFFFF', borderRadius: 10,
+    flex: 1, borderRadius: 10,
     padding: 12, shadowColor: '#000', shadowOpacity: 0.04,
     shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
-  metricTitle: { fontSize: 11, color: '#5B6973', fontWeight: '500' },
-  metricValue: { fontSize: 18, fontWeight: '800', color: '#151515', marginTop: 4 },
-  peakValue: { color: '#E04635' },
+  metricTitle: { fontSize: 11, fontWeight: '500' },
+  metricValue: { fontSize: 18, fontWeight: '800', marginTop: 4 },
+  peakValue: {},
 
   compareCard: {
-    marginTop: 8, backgroundColor: '#FFFFFF', borderRadius: 10,
+    marginTop: 8, borderRadius: 10,
     padding: 14, shadowColor: '#000', shadowOpacity: 0.04,
     shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
   compareHeaderRow: {
     flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10,
   },
-  compareTitle: { fontSize: 13, fontWeight: '700', color: '#151515' },
+  compareTitle: { fontSize: 13, fontWeight: '700' },
   compareRow: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start',
   },
-  compareLabel: { fontSize: 10, color: '#8A9BA8' },
-  compareStrong: { fontSize: 18, fontWeight: '800', color: '#151515', marginTop: 2 },
+  compareLabel: { fontSize: 10 },
+  compareStrong: { fontSize: 18, fontWeight: '800', marginTop: 2 },
   compareRight: { alignItems: 'flex-end' },
-  compareMuted: { fontSize: 18, fontWeight: '700', color: '#8A9BA8', marginTop: 2 },
+  compareMuted: { fontSize: 18, fontWeight: '700', marginTop: 2 },
   progressBg: {
-    height: 8, borderRadius: 4, backgroundColor: '#E8ECF0', marginTop: 12,
+    height: 8, borderRadius: 4, marginTop: 12,
     overflow: 'hidden',
   },
-  progressFill: { height: 8, borderRadius: 4, backgroundColor: '#56B96B' },
+  progressFill: { height: 8, borderRadius: 4 },
   savedRow: {
     flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6,
   },
-  savedText: { fontSize: 11, color: '#2A9C57', fontWeight: '600' },
+  savedText: { fontSize: 11, fontWeight: '600' },
 
   alertsCard: {
-    marginTop: 8, backgroundColor: '#FFFFFF', borderRadius: 10,
+    marginTop: 8, borderRadius: 10,
     padding: 14, shadowColor: '#000', shadowOpacity: 0.04,
     shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
-  alertsTitle: { fontSize: 14, fontWeight: '700', color: '#151515', marginBottom: 8 },
+  alertsTitle: { fontSize: 14, fontWeight: '700', marginBottom: 8 },
   alertHeader: {
-    flexDirection: 'row', backgroundColor: '#F4F6F8', borderRadius: 6,
+    flexDirection: 'row', borderRadius: 6,
     paddingVertical: 6, paddingHorizontal: 8, marginBottom: 4,
   },
-  alertHeaderText: { fontSize: 10, fontWeight: '700', color: '#5B6973' },
+  alertHeaderText: { fontSize: 10, fontWeight: '700' },
   alertRow: {
     flexDirection: 'row', paddingVertical: 8, paddingHorizontal: 8,
-    borderBottomWidth: 1, borderBottomColor: '#F0F2F4',
+    borderBottomWidth: 1,
   },
-  alertCell: { fontSize: 11, color: '#333' },
+  alertCell: { fontSize: 11 },
   colSerial: { width: 40 },
   colMeter: { width: 100 },
   colConsumer: { flex: 1 },
@@ -692,17 +690,17 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   dateModalContent: {
-    backgroundColor: '#FFFFFF', borderTopLeftRadius: 16,
+    borderTopLeftRadius: 16,
     borderTopRightRadius: 16, paddingBottom: 30,
   },
   dateModalHeader: {
     flexDirection: 'row', justifyContent: 'space-between',
     alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12,
-    borderBottomWidth: 1, borderBottomColor: '#E8ECF0',
+    borderBottomWidth: 1,
   },
-  dateModalCancel: { fontSize: 14, color: '#E04635' },
-  dateModalTitle: { fontSize: 15, fontWeight: '700', color: '#151515' },
-  dateModalDone: { fontSize: 14, color: '#1F4B97', fontWeight: '600' },
+  dateModalCancel: { fontSize: 14 },
+  dateModalTitle: { fontSize: 15, fontWeight: '700' },
+  dateModalDone: { fontSize: 14, fontWeight: '600' },
 });
 
 export default DashboardScreen;

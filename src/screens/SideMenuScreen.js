@@ -11,6 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { useDrawer } from '../context/DrawerContext';
+import { useThemeMode } from '../context/ThemeContext';
 import AppHeader from '../components/AppHeader';
 
 const MENU_ITEMS = [
@@ -26,6 +27,7 @@ const SideMenuScreen = () => {
   const navigation = useNavigation();
   const { user, logout } = useAuth();
   const { closeDrawer, activeScreen, setActiveScreen } = useDrawer();
+  const { theme } = useThemeMode();
 
   const isItemActive = (item) => {
     if (item.tabScreen) return activeScreen === item.tabScreen;
@@ -56,18 +58,11 @@ const SideMenuScreen = () => {
     .split(' ').slice(0, 2).map((t) => t.charAt(0).toUpperCase()).join('');
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: theme.colors.drawerSurface }]}>
       <Image source={require('../../assets/Background.png')} style={styles.bgImage} resizeMode="cover" />
       <View style={styles.safeArea}>
         {/* Full-width header */}
         <View style={styles.topRow}>
-          {/* <TouchableOpacity style={[styles.circleBtn, styles.circleBtnActive]} activeOpacity={0.85} onPress={() => closeDrawer()}>
-            <Ionicons name="menu-outline" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
-          <Image source={require('../../assets/Logo.png')} style={styles.logo} resizeMode="contain" />
-          <TouchableOpacity style={styles.circleBtn} activeOpacity={0.85} onPress={() => navigateTo('Notifications')}>
-            <Ionicons name="notifications-outline" size={20} color="#193977" />
-          </TouchableOpacity> */}
           <AppHeader
             navigation={navigation}
             rightOnPress={() => navigateTo('Notifications')}
@@ -80,9 +75,9 @@ const SideMenuScreen = () => {
         <View style={styles.menuBody}>
           {/* User card */}
           <Pressable onPress={() => navigateTo("Profile")}>
-            <View style={styles.userCard}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>{initials}</Text>
+            <View style={[styles.userCard, { backgroundColor: theme.colors.settingsCard, borderColor: theme.colors.ringBorder }]}>
+              <View style={[styles.avatar, { backgroundColor: theme.colors.headerButton, borderColor: theme.colors.drawerText }]}>
+                <Text style={[styles.avatarText, { color: theme.colors.headerIcon }]}>{initials}</Text>
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.userName}>{consumerLabel}</Text>
@@ -97,8 +92,8 @@ const SideMenuScreen = () => {
               const active = isItemActive(item);
               return (
                 <TouchableOpacity key={item.label} style={styles.menuItem} activeOpacity={0.85} onPress={() => navigateTo(item.target, item.tabScreen)}>
-                  <Ionicons name={active ? (item.filled || item.icon) : item.icon} size={22} color={active ? '#5BD07B' : '#C4D6F7'} />
-                  <Text style={[styles.menuLabel, active && styles.menuLabelActive]}>{item.label}</Text>
+                  <Ionicons name={active ? (item.filled || item.icon) : item.icon} size={22} color={active ? theme.colors.drawerTextActive : theme.colors.drawerText} />
+                  <Text style={[styles.menuLabel, { color: theme.colors.drawerText }, active && styles.menuLabelActive]}>{item.label}</Text>
                 </TouchableOpacity>
               );
             })}
@@ -107,14 +102,14 @@ const SideMenuScreen = () => {
           {/* Footer */}
           <View style={styles.footer}>
             <TouchableOpacity style={styles.menuItem} activeOpacity={0.85} onPress={() => navigateTo('Settings')}>
-              <Ionicons name="settings-outline" size={22} color="#C4D6F7" />
-              <Text style={styles.menuLabel}>Settings</Text>
+              <Ionicons name="settings-outline" size={22} color={theme.colors.drawerText} />
+              <Text style={[styles.menuLabel, { color: theme.colors.drawerText }]}>Settings</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.menuItem} activeOpacity={0.85} onPress={handleLogout}>
-              <Ionicons name="log-out-outline" size={22} color="#C4D6F7" />
-              <Text style={styles.menuLabel}>Logout</Text>
+              <Ionicons name="log-out-outline" size={22} color={theme.colors.drawerText} />
+              <Text style={[styles.menuLabel, { color: theme.colors.drawerText }]}>Logout</Text>
             </TouchableOpacity>
-            <Text style={styles.version}>Version 1.0.26</Text>
+            <Text style={[styles.version, { color: theme.colors.settingsTextMuted }]}>Version 1.0.26</Text>
           </View>
         </View>
       </View>
@@ -123,7 +118,7 @@ const SideMenuScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#0B1A3E' },
+  root: { flex: 1 },
   bgImage: { ...StyleSheet.absoluteFillObject, width: '100%', height: '100%', opacity: 0.7 },
   safeArea: { flex: 1 },
 
@@ -133,14 +128,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingTop: 6, marginBottom: 16,
   },
   circleBtn: {
-    width: 50, height: 50, borderRadius: 25, backgroundColor: '#F1F5FB',
+    width: 50, height: 50, borderRadius: 25, backgroundColor: '#F1F5FB', // intentionally static
     alignItems: 'center', justifyContent: 'center',
   },
-  circleBtnActive: { backgroundColor: '#4DB862' },
+  circleBtnActive: { backgroundColor: '#4DB862' }, // intentionally static
   logo: { width: 52, height: 52 },
 
   /* Menu body — left-aligned content */
-  menuBody: { flex: 1, paddingHorizontal: 20, marginTop: "15%" },
+  menuBody: { flex: 1, paddingHorizontal: 20, marginTop: "25%" },
 
   userCard: {
     backgroundColor: 'rgba(30,60,130,0.5)', borderRadius: 14,
@@ -149,21 +144,21 @@ const styles = StyleSheet.create({
   },
   avatar: {
     width: 50, height: 50, borderRadius: 25,
-    borderWidth: 1.5, borderColor: '#7BAAEE',
-    backgroundColor: '#D8E4F5', alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1.5,
+    alignItems: 'center', justifyContent: 'center',
     marginRight: 12,
   },
-  avatarText: { color: '#1E4D8E', fontWeight: '700', fontSize: 16 },
-  userName: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
-  userId: { color: '#A8C4F0', fontSize: 12, marginTop: 2 },
+  avatarText: { fontWeight: '700', fontSize: 16 },
+  userName: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' }, // intentionally static
+  userId: { color: '#A8C4F0', fontSize: 12, marginTop: 2 }, // intentionally static
 
   menuGroup: { gap: 4, marginTop: 6 },
   menuItem: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 14, paddingVertical: 10, paddingRight: 16 },
-  menuLabel: { color: '#D0DFFA', fontSize: 16, fontWeight: '500' },
-  menuLabelActive: { color: '#FFFFFF', fontWeight: '700' },
+  menuLabel: { fontSize: 16, fontWeight: '500' },
+  menuLabelActive: { color: '#FFFFFF', fontWeight: '700' }, // intentionally static
 
-  footer: { marginTop: 'auto', paddingBottom: 14 },
-  version: { color: '#7B9AD4', marginTop: 8, fontSize: 12 },
+  footer: { marginTop: 'auto', paddingBottom: "15%" },
+  version: { marginTop: 8, fontSize: 12 },
 });
 
 export default SideMenuScreen;

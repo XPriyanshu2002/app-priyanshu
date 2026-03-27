@@ -18,6 +18,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useAuth } from '../context/AuthContext';
+import { useThemeMode } from '../context/ThemeContext';
 import { isStrongEnoughPassword, isValidEmail } from '../utils/validators';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -25,6 +26,7 @@ const HERO_HEIGHT = SCREEN_HEIGHT * 0.24;
 
 const RegisterScreen = ({ navigation }) => {
   const { register } = useAuth();
+  const { theme } = useThemeMode();
 
   const nameInputRef = useRef(null);
   const emailInputRef = useRef(null);
@@ -105,9 +107,9 @@ const RegisterScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-      <StatusBar style="light" />
-      <Animated.View style={[styles.root, { transform: [{ translateY: shiftY }] }]}>
+    <View style={{flex: 1}}>
+      <StatusBar style={theme.mode === 'dark' ? 'light' : 'dark'} />
+      <Animated.View style={[styles.root, { backgroundColor: theme.colors.surface, transform: [{ translateY: shiftY }] }]}>
         <View style={styles.heroWrap}>
           <ImageBackground source={require('../../assets/Background.png')} style={styles.heroBg} resizeMode="cover" />
         </View>
@@ -125,28 +127,28 @@ const RegisterScreen = ({ navigation }) => {
               <Image source={require('../../assets/Logo.png')} style={styles.avatarLogo} resizeMode="contain" />
             </View>
 
-            <Text style={styles.title}>Create Account</Text>
+            <Text style={[styles.title, { color: theme.colors.text }]}>Create Account</Text>
 
-            <View style={styles.inputWrap}>
+            <View style={[styles.inputWrap, { backgroundColor: theme.colors.inputBackground }]}>
               <TextInput
                 ref={nameInputRef}
-                style={styles.input}
+                style={[styles.input, { color: theme.colors.inputText }]}
                 placeholder="Full Name"
-                placeholderTextColor="#A0A0A0"
+                placeholderTextColor={theme.colors.inputPlaceholder}
                 returnKeyType="next"
                 value={name}
                 onChangeText={setName}
                 onSubmitEditing={() => emailInputRef.current?.focus()}
               />
-              <Ionicons name="person-outline" size={18} color="#A0A0A0" />
+              <Ionicons name="person-outline" size={18} color={theme.colors.inputPlaceholder} />
             </View>
 
-            <View style={styles.inputWrap}>
+            <View style={[styles.inputWrap, { backgroundColor: theme.colors.inputBackground }]}>
               <TextInput
                 ref={emailInputRef}
-                style={styles.input}
+                style={[styles.input, { color: theme.colors.inputText }]}
                 placeholder="Email Id"
-                placeholderTextColor="#A0A0A0"
+                placeholderTextColor={theme.colors.inputPlaceholder}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 returnKeyType="next"
@@ -154,15 +156,15 @@ const RegisterScreen = ({ navigation }) => {
                 onChangeText={setEmail}
                 onSubmitEditing={() => passwordInputRef.current?.focus()}
               />
-              <Ionicons name="mail-outline" size={18} color="#A0A0A0" />
+              <Ionicons name="mail-outline" size={18} color={theme.colors.inputPlaceholder} />
             </View>
 
-            <View style={styles.inputWrap}>
+            <View style={[styles.inputWrap, { backgroundColor: theme.colors.inputBackground }]}>
               <TextInput
                 ref={passwordInputRef}
-                style={styles.input}
+                style={[styles.input, { color: theme.colors.inputText }]}
                 placeholder="Password"
-                placeholderTextColor="#A0A0A0"
+                placeholderTextColor={theme.colors.inputPlaceholder}
                 secureTextEntry={!showPassword}
                 returnKeyType="next"
                 value={password}
@@ -170,16 +172,16 @@ const RegisterScreen = ({ navigation }) => {
                 onSubmitEditing={() => confirmPasswordInputRef.current?.focus()}
               />
               <Pressable onPress={() => setShowPassword((prev) => !prev)} hitSlop={8}>
-                <Ionicons name={showPassword ? 'eye-outline' : 'eye-off-outline'} size={18} color="#A0A0A0" />
+                <Ionicons name={showPassword ? 'eye-outline' : 'eye-off-outline'} size={18} color={theme.colors.inputPlaceholder} />
               </Pressable>
             </View>
 
-            <View style={styles.inputWrap}>
+            <View style={[styles.inputWrap, { backgroundColor: theme.colors.inputBackground }]}>
               <TextInput
                 ref={confirmPasswordInputRef}
-                style={styles.input}
+                style={[styles.input, { color: theme.colors.inputText }]}
                 placeholder="Confirm Password"
-                placeholderTextColor="#A0A0A0"
+                placeholderTextColor={theme.colors.inputPlaceholder}
                 secureTextEntry={!showConfirmPassword}
                 returnKeyType="done"
                 value={confirmPassword}
@@ -190,7 +192,7 @@ const RegisterScreen = ({ navigation }) => {
                 <Ionicons
                   name={showConfirmPassword ? 'eye-outline' : 'eye-off-outline'}
                   size={18}
-                  color="#A0A0A0"
+                  color={theme.colors.inputPlaceholder}
                 />
               </Pressable>
             </View>
@@ -200,46 +202,44 @@ const RegisterScreen = ({ navigation }) => {
                 <Ionicons
                   name={rememberMe ? 'checkbox' : 'square-outline'}
                   size={18}
-                  color={rememberMe ? '#4DB862' : '#8BA18F'}
+                  color={rememberMe ? theme.colors.success : theme.colors.textMuted}
                 />
-                <Text style={styles.rememberText}>Remember</Text>
+                <Text style={[styles.rememberText, { color: theme.colors.success }]}>Remember</Text>
               </Pressable>
               <Pressable onPress={() => setError('Forgot password flow is not configured yet.')} hitSlop={8}>
-                <Text style={styles.forgotText}>Forgot Password?</Text>
+                <Text style={[styles.forgotText, { color: theme.colors.success }]}>Forgot Password?</Text>
               </Pressable>
             </View>
 
-            {!!error && <Text style={styles.error}>{error}</Text>}
-            {!!success && <Text style={styles.success}>{success}</Text>}
+            {!!error && <Text style={[styles.error, { color: theme.colors.danger }]}>{error}</Text>}
+            {!!success && <Text style={[styles.success, { color: theme.colors.success }]}>{success}</Text>}
 
             <Pressable
               onPress={onSubmit}
-              style={({ pressed }) => [styles.submitButton, pressed || loading ? styles.pressed : null]}
+              style={({ pressed }) => [styles.submitButton, { backgroundColor: theme.colors.success }, pressed || loading ? styles.pressed : null]}
               disabled={loading}
             >
               <Text style={styles.submitButtonText}>{loading ? 'Please wait...' : 'Register Now'}</Text>
             </Pressable>
 
             <Pressable onPress={() => navigation.replace('Login')} style={styles.switchLink}>
-              <Text style={styles.switchText}>Back to Login</Text>
+              <Text style={[styles.switchText, { color: theme.colors.primary }]}>Back to Login</Text>
             </Pressable>
           </View>
         </ScrollView>
 
-        <View style={styles.homeIndicator} />
+        <View style={[styles.homeIndicator, { backgroundColor: theme.colors.primaryDark }]} />
       </Animated.View>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   root: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   heroWrap: {
     position: 'absolute',
@@ -286,10 +286,9 @@ const styles = StyleSheet.create({
     height: 55,
   },
   title: {
-    marginTop: "15%",
+    marginTop: "25%",
     fontSize: 24,
     fontWeight: '700',
-    color: '#1E1E1E',
     lineHeight: 34,
     textAlign: 'center',
     marginBottom: 20,
@@ -298,7 +297,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 50,
     borderRadius: 8,
-    backgroundColor: '#F4F4F4',
     marginBottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
@@ -306,7 +304,6 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    color: '#2B2B2B',
     fontSize: 14,
   },
   metaRow: {
@@ -323,25 +320,21 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   rememberText: {
-    color: '#4DB862',
     fontSize: 14,
     fontWeight: '500',
   },
   forgotText: {
-    color: '#4DB862',
     fontSize: 14,
     fontWeight: '500',
   },
   error: {
     width: '100%',
-    color: '#C44536',
     fontSize: 13,
     marginBottom: 10,
     textAlign: 'left',
   },
   success: {
     width: '100%',
-    color: '#1B8D56',
     fontSize: 13,
     marginBottom: 10,
     textAlign: 'left',
@@ -350,12 +343,11 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 52,
     borderRadius: 8,
-    backgroundColor: '#4DB862',
     alignItems: 'center',
     justifyContent: 'center',
   },
   submitButtonText: {
-    color: '#FFFFFF',
+    color: '#FFFFFF', // intentionally static
     fontSize: 16,
     fontWeight: '600',
   },
@@ -367,7 +359,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   switchText: {
-    color: '#1E469B',
     fontSize: 14,
     fontWeight: '500',
   },
@@ -377,7 +368,6 @@ const styles = StyleSheet.create({
     width: 134,
     height: 5,
     borderRadius: 3,
-    backgroundColor: '#1E2A5E',
   },
 });
 
